@@ -1,0 +1,2194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Devomatic LMS</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080b14;
+  --s1: #0e1422;
+  --s2: #141d30;
+  --s3: #1c2840;
+  --s4: #243050;
+  --border: #2a3a58;
+  --border2: #354a6e;
+  --cyan: #00e5ff;
+  --cyan2: #00b8d4;
+  --violet: #7c3aed;
+  --violet2: #9d5cf0;
+  --green: #00e676;
+  --green2: #00c853;
+  --red: #ff1744;
+  --red2: #ff5252;
+  --amber: #ffab00;
+  --pink: #e91e63;
+  --text: #e8f0fe;
+  --text2: #8ba3c7;
+  --text3: #4a6080;
+  --r: 10px;
+  --rs: 6px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.5);
+  --glow-cyan: 0 0 24px rgba(0,229,255,0.18);
+  --glow-violet: 0 0 24px rgba(124,58,237,0.18);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--s1);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+.hidden{display:none!important;}
+
+/* LOADER */
+#loader{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;z-index:9999;}
+.loader-logo{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;letter-spacing:-1px;}
+.loader-logo span{color:var(--cyan);}
+.loader-bar{width:200px;height:2px;background:var(--s3);border-radius:1px;overflow:hidden;}
+.loader-fill{height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--violet));border-radius:1px;animation:loadfill 1.2s ease forwards;}
+@keyframes loadfill{to{width:100%;}}
+
+/* TOAST */
+#toast{position:fixed;top:24px;right:24px;z-index:9998;padding:12px 20px;border-radius:var(--rs);font-size:13px;font-weight:500;background:var(--s2);border:1px solid var(--border);box-shadow:var(--shadow);transform:translateX(130%);transition:transform .3s cubic-bezier(.34,1.56,.64,1);max-width:320px;font-family:'DM Sans',sans-serif;}
+#toast.show{transform:translateX(0);}
+#toast.success{border-color:var(--green);color:var(--green);}
+#toast.error{border-color:var(--red);color:var(--red2);}
+#toast.info{border-color:var(--cyan);color:var(--cyan);}
+#toast.warn{border-color:var(--amber);color:var(--amber);}
+
+/* LOGIN */
+#loginPage{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;background:var(--bg);}
+#loginPage::before{content:'';position:absolute;width:800px;height:800px;background:radial-gradient(circle,rgba(0,229,255,.04) 0%,transparent 65%);top:-200px;left:-200px;pointer-events:none;}
+#loginPage::after{content:'';position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(124,58,237,.05) 0%,transparent 65%);bottom:-100px;right:-100px;pointer-events:none;}
+.login-wrap{display:grid;grid-template-columns:1fr 1fr;width:900px;min-height:560px;background:var(--s1);border:1px solid var(--border);border-radius:20px;overflow:hidden;box-shadow:var(--shadow),var(--glow-cyan);animation:fadeUp .6s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+.login-left{background:linear-gradient(135deg,#0a0f1e 0%,#111828 100%);padding:56px 48px;display:flex;flex-direction:column;justify-content:center;border-right:1px solid var(--border);position:relative;overflow:hidden;}
+.login-left::before{content:'';position:absolute;width:300px;height:300px;background:radial-gradient(circle,rgba(0,229,255,.07),transparent 70%);top:-80px;right:-80px;}
+.login-left::after{content:'';position:absolute;width:200px;height:200px;background:radial-gradient(circle,rgba(124,58,237,.07),transparent 70%);bottom:-40px;left:-40px;}
+.login-brand{position:relative;z-index:1;}
+.login-brand .icon{width:60px;height:60px;background:linear-gradient(135deg,var(--cyan),var(--violet));border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:20px;box-shadow:0 8px 24px rgba(0,229,255,.25);}
+.login-brand h1{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;letter-spacing:-1px;line-height:1.1;}
+.login-brand h1 span{color:var(--cyan);}
+.login-brand p{color:var(--text2);font-size:14px;margin-top:10px;line-height:1.6;}
+.login-features{margin-top:40px;display:flex;flex-direction:column;gap:12px;position:relative;z-index:1;}
+.login-feat{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text2);}
+.login-feat .dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);flex-shrink:0;}
+.login-right{padding:48px;}
+.login-right h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;margin-bottom:6px;}
+.login-right p{font-size:13px;color:var(--text2);margin-bottom:32px;}
+
+/* FORMS */
+.fg{margin-bottom:16px;}
+.fg label{display:block;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px;}
+.fg input,.fg select,.fg textarea{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);padding:10px 14px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;transition:border-color .2s,box-shadow .2s;outline:none;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,229,255,.08);}
+.fg textarea{min-height:88px;resize:vertical;line-height:1.6;}
+.fg select option{background:var(--s2);}
+.fg-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fg-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:var(--rs);font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;border:none;transition:all .2s;text-decoration:none;white-space:nowrap;}
+.btn-primary{background:linear-gradient(135deg,var(--cyan),var(--cyan2));color:#000;box-shadow:0 4px 16px rgba(0,229,255,.25);}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(0,229,255,.35);}
+.btn-violet{background:linear-gradient(135deg,var(--violet),var(--violet2));color:#fff;box-shadow:0 4px 16px rgba(124,58,237,.25);}
+.btn-violet:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(124,58,237,.35);}
+.btn-ghost{background:var(--s3);color:var(--text);border:1px solid var(--border);}
+.btn-ghost:hover{background:var(--s4);border-color:var(--border2);}
+.btn-danger{background:rgba(255,23,68,.12);color:var(--red2);border:1px solid rgba(255,23,68,.25);}
+.btn-danger:hover{background:rgba(255,23,68,.22);}
+.btn-success{background:rgba(0,230,118,.1);color:var(--green);border:1px solid rgba(0,230,118,.22);}
+.btn-success:hover{background:rgba(0,230,118,.2);}
+.btn-amber{background:rgba(255,171,0,.1);color:var(--amber);border:1px solid rgba(255,171,0,.22);}
+.btn-amber:hover{background:rgba(255,171,0,.2);}
+.btn-sm{padding:6px 12px;font-size:12px;}
+.btn-xs{padding:4px 10px;font-size:11px;}
+.btn-full{width:100%;justify-content:center;}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important;}
+
+/* LAYOUT */
+#app{display:flex;min-height:100vh;}
+.sidebar{width:220px;background:var(--s1);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;height:100vh;z-index:200;transition:transform .3s;}
+.sb-logo{padding:20px 16px 16px;border-bottom:1px solid var(--border);}
+.sb-logo .mark{display:flex;align-items:center;gap:10px;}
+.sb-logo .mark-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--cyan),var(--violet));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.sb-logo .mark-text h2{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;letter-spacing:-.5px;}
+.sb-logo .mark-text h2 span{color:var(--cyan);}
+.sb-logo .mark-text p{font-size:10px;color:var(--text3);margin-top:1px;}
+.sb-nav{flex:1;padding:12px 10px;overflow-y:auto;}
+.sb-section{font-size:9px;font-weight:700;letter-spacing:1.2px;color:var(--text3);text-transform:uppercase;padding:12px 8px 4px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:var(--rs);color:var(--text2);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;margin-bottom:1px;position:relative;}
+.nav-item:hover{background:var(--s2);color:var(--text);}
+.nav-item.active{background:rgba(0,229,255,.1);color:var(--cyan);}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:20px;background:var(--cyan);border-radius:0 3px 3px 0;}
+.nav-icon{font-size:15px;width:18px;text-align:center;flex-shrink:0;}
+.nav-badge{margin-left:auto;background:var(--violet);color:#fff;font-size:9px;padding:2px 6px;border-radius:10px;font-weight:700;}
+.sb-foot{padding:12px 10px;border-top:1px solid var(--border);}
+.user-card{display:flex;align-items:center;gap:9px;padding:10px;border-radius:var(--rs);background:var(--s2);border:1px solid var(--border);}
+.u-avatar{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;}
+.ua-admin{background:rgba(0,229,255,.18);color:var(--cyan);}
+.ua-teacher{background:rgba(124,58,237,.18);color:var(--violet2);}
+.ua-student{background:rgba(0,230,118,.18);color:var(--green);}
+.u-info p{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;}
+.u-info span{font-size:10px;color:var(--text3);text-transform:capitalize;}
+.main{margin-left:220px;flex:1;padding:28px 32px;min-height:100vh;}
+.topbar{display:flex;align-items:center;gap:16px;margin-bottom:28px;}
+.topbar h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;flex:1;}
+.topbar-actions{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;}
+
+/* CARDS */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:20px;}
+.card-sm{padding:14px;}
+.stat-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:20px;transition:border-color .2s,transform .2s;}
+.stat-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.stat-icon{font-size:26px;margin-bottom:10px;}
+.stat-val{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;}
+.stat-label{font-size:12px;color:var(--text2);margin-top:4px;}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:6px;}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;}
+
+/* TABLES */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead th{padding:9px 14px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);border-bottom:1px solid var(--border);white-space:nowrap;}
+tbody td{padding:11px 14px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tbody tr:hover{background:var(--s2);}
+tbody tr:last-child td{border-bottom:none;}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
+.b-cyan{background:rgba(0,229,255,.1);color:var(--cyan);border:1px solid rgba(0,229,255,.2);}
+.b-violet{background:rgba(124,58,237,.1);color:var(--violet2);border:1px solid rgba(124,58,237,.2);}
+.b-green{background:rgba(0,230,118,.1);color:var(--green);border:1px solid rgba(0,230,118,.2);}
+.b-red{background:rgba(255,23,68,.1);color:var(--red2);border:1px solid rgba(255,23,68,.2);}
+.b-amber{background:rgba(255,171,0,.1);color:var(--amber);border:1px solid rgba(255,171,0,.2);}
+.b-pink{background:rgba(233,30,99,.1);color:var(--pink);border:1px solid rgba(233,30,99,.2);}
+.b-gray{background:rgba(139,163,199,.1);color:var(--text2);border:1px solid rgba(139,163,199,.2);}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(6px);animation:fIn .2s ease;}
+@keyframes fIn{from{opacity:0;}to{opacity:1;}}
+.modal{background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:28px;width:540px;max-width:95vw;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow);animation:scIn .25s ease;}
+.modal-lg{width:720px;}
+.modal-xl{width:920px;}
+@keyframes scIn{from{transform:scale(.93);opacity:0;}to{transform:scale(1);opacity:1;}}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+.modal-head h3{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;}
+.modal-x{width:30px;height:30px;border-radius:7px;background:var(--s2);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--text2);transition:all .2s;}
+.modal-x:hover{background:var(--red);color:#fff;border-color:var(--red);}
+.modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
+
+/* COURSE CARDS */
+.course-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:18px;transition:all .2s;position:relative;overflow:hidden;}
+.course-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan),var(--violet));opacity:0;transition:opacity .2s;}
+.course-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:var(--shadow);}
+.course-card:hover::after{opacity:1;}
+.course-card h3{font-size:15px;font-weight:600;margin-bottom:6px;font-family:'Syne',sans-serif;}
+.course-card p{font-size:12px;color:var(--text2);line-height:1.5;}
+.course-meta{display:flex;align-items:center;gap:12px;margin-top:14px;font-size:11px;color:var(--text3);}
+.course-fee{font-family:'DM Mono',monospace;font-size:18px;font-weight:500;color:var(--amber);margin-top:10px;}
+
+/* EXAM / MCQ */
+.q-block{background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);padding:18px;margin-bottom:14px;}
+.opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
+.opt-btn{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:var(--rs);border:2px solid var(--border);background:var(--s1);cursor:pointer;transition:all .18s;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);text-align:left;}
+.opt-btn:hover{border-color:var(--cyan);background:rgba(0,229,255,.04);}
+.opt-btn.selected{border-color:var(--cyan);background:rgba(0,229,255,.08);color:var(--cyan);}
+.opt-btn.correct{border-color:var(--green);background:rgba(0,230,118,.08);color:var(--green);}
+.opt-btn.wrong{border-color:var(--red);background:rgba(255,23,68,.08);color:var(--red2);}
+.opt-lbl{width:22px;height:22px;border-radius:5px;background:var(--s3);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+/* CODE EDITOR */
+.code-editor{background:#060a12;border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;}
+.code-head{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;background:var(--s2);border-bottom:1px solid var(--border);}
+.code-editor textarea{width:100%;min-height:180px;background:transparent;border:none;color:#a8d0f8;font-family:'DM Mono',monospace;font-size:13px;padding:14px;resize:vertical;outline:none;line-height:1.7;}
+
+/* PROGRESS */
+.prog-bar{background:var(--s3);border-radius:20px;height:5px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--cyan),var(--violet));transition:width .5s ease;}
+
+/* TIMER */
+#examTimer{position:fixed;top:20px;right:20px;z-index:500;background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:11px 18px;display:none;align-items:center;gap:10px;box-shadow:var(--shadow);}
+#examTimer.warning{border-color:var(--amber);}
+#examTimer.danger{border-color:var(--red);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.65;}}
+#timerVal{font-family:'DM Mono',monospace;font-size:20px;font-weight:500;}
+
+/* RESULT */
+.result-ring{width:110px;height:110px;border-radius:50%;border:4px solid var(--border);margin:0 auto 18px;display:flex;align-items:center;justify-content:center;flex-direction:column;}
+.result-ring.pass{border-color:var(--green);}
+.result-ring.fail{border-color:var(--red);}
+.result-ring .rn{font-family:'DM Mono',monospace;font-size:26px;font-weight:500;}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:48px 24px;color:var(--text2);}
+.empty .ei{font-size:44px;margin-bottom:14px;}
+.empty p{font-size:14px;}
+.empty span{font-size:12px;color:var(--text3);display:block;margin-top:4px;}
+
+/* LESSON VIEWER */
+.lesson-sb{width:260px;border-right:1px solid var(--border);padding:16px;overflow-y:auto;flex-shrink:0;}
+.lesson-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:var(--rs);cursor:pointer;transition:all .15s;margin-bottom:3px;}
+.lesson-item:hover{background:var(--s2);}
+.lesson-item.active{background:rgba(0,229,255,.1);color:var(--cyan);}
+.lesson-num{width:22px;height:22px;border-radius:5px;background:var(--s3);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'DM Mono',monospace;}
+.lesson-content{flex:1;padding:24px;overflow-y:auto;line-height:1.8;font-size:14px;white-space:pre-wrap;}
+
+/* ATTENDANCE */
+.att-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;}
+.att-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);padding:14px;text-align:center;cursor:pointer;transition:all .15s;}
+.att-card:hover{border-color:var(--border2);}
+.att-card.present{border-color:var(--green);background:rgba(0,230,118,.07);}
+.att-card.absent{border-color:var(--red);background:rgba(255,23,68,.07);}
+.att-card.late{border-color:var(--amber);background:rgba(255,171,0,.07);}
+.att-name{font-size:13px;font-weight:600;margin-bottom:4px;}
+.att-status{font-size:11px;margin-top:8px;display:flex;gap:4px;justify-content:center;}
+.att-btn{padding:3px 8px;border-radius:4px;border:none;cursor:pointer;font-size:10px;font-weight:700;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.att-p{background:rgba(0,230,118,.15);color:var(--green);}
+.att-p:hover,.att-p.active{background:var(--green);color:#000;}
+.att-a{background:rgba(255,23,68,.15);color:var(--red2);}
+.att-a:hover,.att-a.active{background:var(--red);color:#fff;}
+.att-l{background:rgba(255,171,0,.15);color:var(--amber);}
+.att-l:hover,.att-l.active{background:var(--amber);color:#000;}
+
+/* FEE */
+.fee-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+.fee-paid{background:rgba(0,230,118,.1);color:var(--green);border:1px solid rgba(0,230,118,.2);}
+.fee-partial{background:rgba(255,171,0,.1);color:var(--amber);border:1px solid rgba(255,171,0,.2);}
+.fee-unpaid{background:rgba(255,23,68,.1);color:var(--red2);border:1px solid rgba(255,23,68,.2);}
+
+/* TABS */
+.tabs{display:flex;gap:3px;background:var(--s2);border-radius:var(--rs);padding:3px;margin-bottom:20px;}
+.tab{flex:1;padding:8px 14px;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;text-align:center;color:var(--text2);border:none;background:none;font-family:'DM Sans',sans-serif;}
+.tab.active{background:var(--s3);color:var(--cyan);}
+.tab:hover:not(.active){color:var(--text);}
+
+/* SEARCH */
+.search-bar{display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);padding:8px 14px;}
+.search-bar input{background:none;border:none;outline:none;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;flex:1;}
+.search-bar input::placeholder{color:var(--text3);}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:16px 0;}
+
+/* CHIP */
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:var(--s3);color:var(--text2);border:1px solid var(--border);}
+
+/* NOTIFICATION DOT */
+.ndot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0;}
+.nd-green{background:var(--green);}
+.nd-red{background:var(--red);}
+.nd-amber{background:var(--amber);}
+
+/* STAT HIGHLIGHT */
+.highlight-box{background:linear-gradient(135deg,rgba(0,229,255,.05),rgba(124,58,237,.05));border:1px solid rgba(0,229,255,.15);border-radius:var(--r);padding:16px;}
+
+/* CATALOG / COMBO */
+.combo-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:16px;transition:all .2s;}
+.combo-card:hover{border-color:var(--border2);}
+.combo-badge{display:inline-block;font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:4px;margin-bottom:10px;}
+.combo-save{font-size:11px;color:var(--green);margin-top:4px;}
+
+/* RESPONSIVE */
+@media(max-width:768px){.sidebar{transform:translateX(-100%);}.main{margin-left:0;padding:16px;}.g2,.g3,.g4,.g5{grid-template-columns:1fr;}.opts-grid{grid-template-columns:1fr;}.login-wrap{grid-template-columns:1fr;}.login-left{display:none;}}
+</style>
+</head>
+<body>
+
+<div id="loader">
+  <div class="loader-logo">Devo<span>matic</span></div>
+  <div class="loader-bar"><div class="loader-fill"></div></div>
+  <p style="font-size:12px;color:var(--text3);margin-top:4px;">Learning Center Management System</p>
+</div>
+
+<div id="toast"></div>
+
+<div id="examTimer">
+  <span>⏱️</span>
+  <div>
+    <div style="font-size:9px;color:var(--text2);letter-spacing:.5px;">TIME LEFT</div>
+    <div id="timerVal">00:00</div>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="loginPage">
+  <div class="login-wrap">
+    <div class="login-left">
+      <div class="login-brand">
+        <div class="icon">🚀</div>
+        <h1>Devo<span>matic</span></h1>
+        <p>Complete Learning Center Management System — courses, attendance, fees, exams & more.</p>
+      </div>
+      <div class="login-features">
+        <div class="login-feat"><span class="dot"></span>Student enrollment & fee tracking</div>
+        <div class="login-feat"><span class="dot"></span>Course & lesson management</div>
+        <div class="login-feat"><span class="dot"></span>Daily attendance with reports</div>
+        <div class="login-feat"><span class="dot"></span>MCQ & coding exam engine</div>
+        <div class="login-feat"><span class="dot"></span>Performance analytics</div>
+        <div class="login-feat"><span class="dot"></span>Role-based access control</div>
+      </div>
+    </div>
+    <div class="login-right">
+      <h2>Sign In</h2>
+      <p>Access your Devomatic dashboard</p>
+      <div class="fg"><label>Username</label><input id="loginUsername" placeholder="Enter username" autocomplete="username"></div>
+      <div class="fg"><label>Password</label><input type="password" id="loginPassword" placeholder="Enter password" autocomplete="current-password"></div>
+      <div class="fg"><label>Login As</label>
+        <select id="loginRole">
+          <option value="admin">🛡️ Administrator</option>
+          <option value="teacher">👨‍🏫 Teacher</option>
+          <option value="student">🎓 Student</option>
+        </select>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="handleLogin()" style="margin-top:4px;">Sign In →</button>
+      <div style="margin-top:20px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);padding:12px;font-size:12px;color:var(--text2);">
+        <div style="font-weight:700;color:var(--text);margin-bottom:6px;">Demo Admin Accounts</div>
+        <div>👤 <code style="color:var(--cyan)">Pratham Attri</code> / <code style="color:var(--green)">Pratham@2002</code></div>
+        <div style="margin-top:3px;">👤 <code style="color:var(--cyan)">Harsh Bhardwaj</code> / <code style="color:var(--green)">Harsh@1999</code></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="mark">
+        <div class="mark-icon">🚀</div>
+        <div class="mark-text">
+          <h2>Devo<span>matic</span></h2>
+          <p id="sbRoleLabel">SYSTEM</p>
+        </div>
+      </div>
+    </div>
+    <nav class="sb-nav" id="sbNav"></nav>
+    <div class="sb-foot">
+      <div class="user-card">
+        <div class="u-avatar" id="sbAvatar"></div>
+        <div class="u-info">
+          <p id="sbName">User</p>
+          <span id="sbRole">role</span>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-full" onclick="logout()" style="margin-top:8px;font-size:12px;">Sign Out</button>
+    </div>
+  </aside>
+  <main class="main" id="mainContent"></main>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// SUPABASE CONFIG
+// ═══════════════════════════════════════
+const SUPABASE_URL = 'https://jxawmeeypszgdvvdyjmk.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp4YXdtZWV5cHN6Z2R2dmR5am1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3MjYyNDgsImV4cCI6MjA5MzMwMjI0OH0.ZUZOasbStDH37uhoFPI23rPd6zwf5dE9-QthFaxOK2s';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ═══════════════════════════════════════
+// DEVOMATIC COURSE CATALOG (from brochure)
+// ═══════════════════════════════════════
+const DEVO_COURSES = [
+  {
+    title: 'Basic Computer Course (BCC)',
+    category: 'Computer Basics',
+    description: 'Computer Fundamentals, MS Windows, Word, Excel, PowerPoint, Internet & Email',
+    difficulty: 'beginner',
+    duration_weeks: 8,
+    fee: 3000,
+    icon: '🖥️',
+    topics: ['Computer Fundamentals','MS Windows','Word, Excel, PowerPoint','Internet & Email']
+  },
+  {
+    title: 'Typing Course',
+    category: 'Typing',
+    description: 'Hindi Typing, English Typing, Speed & Accuracy, Practice Tests',
+    difficulty: 'beginner',
+    duration_weeks: 4,
+    fee: 2000,
+    icon: '⌨️',
+    topics: ['Hindi Typing','English Typing','Speed & Accuracy','Practice Tests']
+  },
+  {
+    title: 'Microsoft Office Course',
+    category: 'MS Office',
+    description: 'MS Word (Advanced), MS Excel (Advanced), MS PowerPoint, Real Office Work',
+    difficulty: 'intermediate',
+    duration_weeks: 10,
+    fee: 4500,
+    icon: '📊',
+    topics: ['MS Word (Advanced)','MS Excel (Advanced)','MS PowerPoint','Real Office Work']
+  },
+  {
+    title: 'Python Programming',
+    category: 'Python',
+    description: 'Python Basics, Functions & Loops, Projects, Logic Building',
+    difficulty: 'intermediate',
+    duration_weeks: 10,
+    fee: 6000,
+    icon: '🐍',
+    topics: ['Python Basics','Functions & Loops','Projects','Logic Building']
+  },
+  {
+    title: 'Web Development',
+    category: 'Web Development',
+    description: 'HTML, CSS, JavaScript Basics, Projects',
+    difficulty: 'intermediate',
+    duration_weeks: 10,
+    fee: 6999,
+    icon: '🌐',
+    topics: ['HTML','CSS','JavaScript Basics','Projects']
+  },
+  {
+    title: 'Graphic Designing',
+    category: 'Design',
+    description: 'Photoshop, Illustrator, Social Media Design, Logo & Branding, Portfolio Projects',
+    difficulty: 'intermediate',
+    duration_weeks: 10,
+    fee: 6000,
+    icon: '🎨',
+    topics: ['Photoshop','Illustrator','Social Media Design','Logo & Branding','Portfolio Projects']
+  },
+  {
+    title: 'Digital Marketing',
+    category: 'Digital Marketing',
+    description: 'Social Media Marketing, SEO Basics, Google & Meta Ads, Content & Creatives, Lead Generation',
+    difficulty: 'intermediate',
+    duration_weeks: 10,
+    fee: 6999,
+    icon: '📱',
+    topics: ['Social Media Marketing','SEO Basics','Google & Meta Ads','Content & Creatives','Lead Generation']
+  },
+];
+
+const DEVO_COMBOS = [
+  { name:'Basic Combo', courses:'BCC + Typing', original:5000, fee:4499, save:501, color:'#00e676' },
+  { name:'Office Combo', courses:'BCC + MS Office', original:7500, fee:6999, save:501, color:'#00b8d4' },
+  { name:'Typing + Office Combo', courses:'Typing + MS Office', original:8500, fee:7000, save:1500, color:'#7c3aed' },
+  { name:'Design + Digital Marketing', courses:'Graphic Designing + Digital Marketing', original:13999, fee:10999, save:3000, color:'#e91e63' },
+  { name:'Developer Combo', courses:'Web Development + Python', original:14999, fee:12999, save:2000, color:'#ffab00' },
+  { name:'Complete Skills Combo', courses:'BCC + Typing + MS Office + Python + Web Dev + Designing + Digital Marketing', original:45000, fee:34999, save:10001, color:'#ff6b35' },
+];
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let currentUser = null;
+let examTimer = null;
+let examTimeLeft = 0;
+let currentExamAnswers = {};
+let currentExamData = null;
+let attendanceMap = {};
+
+// ═══════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════
+function toast(msg, type='info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `show ${type}`;
+  setTimeout(() => t.className = '', 3500);
+}
+function loader(v) { document.getElementById('loader').style.display = v ? 'flex' : 'none'; }
+function setMain(html) { document.getElementById('mainContent').innerHTML = html; }
+function rid() { return Math.random().toString(36).slice(2); }
+function fmtDate(d) { return d ? new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—'; }
+function fmtMoney(n) { return '₹' + (n||0).toLocaleString('en-IN'); }
+function pct(score,total) { return total ? Math.round(score/total*100) : 0; }
+
+// ═══════════════════════════════════════
+// SEED COURSES INTO DB (run once via button)
+// ═══════════════════════════════════════
+async function seedDevoCoursesIntoDB() {
+  loader(true);
+  let inserted = 0, skipped = 0;
+  for (const c of DEVO_COURSES) {
+    const { data: existing } = await db.from('devo_courses').select('id').eq('title', c.title).maybeSingle();
+    if (existing) { skipped++; continue; }
+    const { error } = await db.from('devo_courses').insert({
+      title: c.title,
+      category: c.category,
+      description: c.description,
+      difficulty: c.difficulty,
+      duration_weeks: c.duration_weeks,
+      fee: c.fee,
+      teacher_id: currentUser.id,
+    });
+    if (!error) inserted++;
+  }
+  loader(false);
+  toast(`Seeded ${inserted} courses! (${skipped} already existed)`, 'success');
+  renderAdminCourses();
+}
+
+// ═══════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════
+async function handleLogin() {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value.trim();
+  const role = document.getElementById('loginRole').value;
+  if (!username || !password) return toast('Fill in all fields','error');
+  loader(true);
+  try {
+    const { data, error } = await db.from('devo_users').select('*')
+      .eq('username', username).eq('password', password).eq('role', role).maybeSingle();
+    if (error) { toast('DB error: ' + error.message, 'error'); }
+    else if (!data) { toast('Invalid credentials or role', 'error'); }
+    else { currentUser = data; sessionStorage.setItem('devoUser', JSON.stringify(data)); initApp(); }
+  } catch(e) { toast('Connection error. Check config.', 'error'); }
+  loader(false);
+}
+
+function logout() {
+  currentUser = null; sessionStorage.removeItem('devoUser'); stopExamTimer();
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('loginPage').classList.remove('hidden');
+  document.getElementById('loginUsername').value = '';
+  document.getElementById('loginPassword').value = '';
+}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+function initApp() {
+  document.getElementById('loginPage').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  const roleEmoji = {admin:'🛡',teacher:'👨‍🏫',student:'🎓'}[currentUser.role]||'👤';
+  document.getElementById('sbAvatar').className = `u-avatar ua-${currentUser.role}`;
+  document.getElementById('sbAvatar').textContent = roleEmoji;
+  document.getElementById('sbName').textContent = currentUser.full_name;
+  document.getElementById('sbRole').textContent = currentUser.role;
+  document.getElementById('sbRoleLabel').textContent = currentUser.role.toUpperCase() + ' PANEL';
+  buildNav(); navigateTo('home');
+}
+
+// ═══════════════════════════════════════
+// NAV CONFIG
+// ═══════════════════════════════════════
+const navCfg = {
+  admin: [
+    { section: 'Overview' },
+    { id:'home', label:'Dashboard', icon:'📊' },
+    { section: 'Academics' },
+    { id:'adminCourses', label:'Courses & Catalog', icon:'📚' },
+    { id:'allExams', label:'All Exams', icon:'📝' },
+    { section: 'People' },
+    { id:'manageUsers', label:'Users', icon:'👥' },
+    { id:'feeManager', label:'Fee Manager', icon:'💰' },
+    { section: 'Reports' },
+    { id:'submissions', label:'Submissions', icon:'📋' },
+    { id:'attendanceReport', label:'Attendance', icon:'📅' },
+  ],
+  teacher: [
+    { section: 'Overview' },
+    { id:'home', label:'Dashboard', icon:'📊' },
+    { section: 'Courses' },
+    { id:'myCourses', label:'My Courses', icon:'📚' },
+    { id:'addCourse', label:'New Course', icon:'➕' },
+    { section: 'Exams' },
+    { id:'myExams', label:'My Exams', icon:'📝' },
+    { id:'createExam', label:'Create Exam', icon:'✏️' },
+    { section: 'Students' },
+    { id:'takeAttendance', label:'Attendance', icon:'📅' },
+    { id:'results', label:'Results', icon:'📈' },
+  ],
+  student: [
+    { section: 'Overview' },
+    { id:'home', label:'Dashboard', icon:'📊' },
+    { section: 'Learning' },
+    { id:'browseCourses', label:'Browse Courses', icon:'📚' },
+    { id:'myCourses', label:'My Enrollments', icon:'🎯' },
+    { section: 'Exams' },
+    { id:'availableExams', label:'Take Exam', icon:'📝' },
+    { id:'myResults', label:'My Results', icon:'📈' },
+    { section: 'Account' },
+    { id:'myFees', label:'My Fees', icon:'💰' },
+    { id:'myAttendance', label:'My Attendance', icon:'📅' },
+  ],
+};
+
+function buildNav() {
+  const items = navCfg[currentUser.role] || [];
+  document.getElementById('sbNav').innerHTML = items.map(i =>
+    i.section
+      ? `<div class="sb-section">${i.section}</div>`
+      : `<div class="nav-item" id="nav-${i.id}" onclick="navigateTo('${i.id}')">
+          <span class="nav-icon">${i.icon}</span>${i.label}
+         </div>`
+  ).join('');
+}
+
+function navigateTo(page) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const el = document.getElementById(`nav-${page}`);
+  if (el) el.classList.add('active');
+  stopExamTimer();
+  const map = {
+    home: renderHome,
+    manageUsers: renderManageUsers,
+    adminCourses: renderAdminCourses,
+    allExams: renderAllExams,
+    submissions: renderAllSubmissions,
+    attendanceReport: renderAttendanceReport,
+    feeManager: renderFeeManager,
+    myCourses: currentUser.role==='teacher' ? renderTeacherCourses : renderStudentEnrollments,
+    addCourse: renderAddCourse,
+    myExams: renderTeacherExams,
+    createExam: renderCreateExam,
+    takeAttendance: renderTakeAttendance,
+    results: renderTeacherResults,
+    browseCourses: renderBrowseCourses,
+    availableExams: renderAvailableExams,
+    myResults: renderMyResults,
+    myFees: renderMyFees,
+    myAttendance: renderMyAttendance,
+  };
+  if (map[page]) map[page]();
+}
+
+// ═══════════════════════════════════════
+// HOME DASHBOARD
+// ═══════════════════════════════════════
+async function renderHome() {
+  loader(true);
+  setMain(`<div class="topbar"><h2>Dashboard</h2></div><div class="g4" id="statsGrid"><div class="stat-card" style="opacity:.5">Loading...</div></div><div id="homeBody"></div>`);
+  const role = currentUser.role;
+  let stats = [], body = '';
+
+  if (role === 'admin') {
+    const [users, courses, exams, subs, enr, fees] = await Promise.all([
+      db.from('devo_users').select('id,role'),
+      db.from('devo_courses').select('id'),
+      db.from('devo_exams').select('id'),
+      db.from('devo_submissions').select('id'),
+      db.from('devo_enrollments').select('id'),
+      db.from('devo_fees').select('amount_paid,total_fee'),
+    ]);
+    const teachers = (users.data||[]).filter(u=>u.role==='teacher').length;
+    const students = (users.data||[]).filter(u=>u.role==='student').length;
+    const totalFee = (fees.data||[]).reduce((a,f)=>a+f.total_fee,0);
+    const collected = (fees.data||[]).reduce((a,f)=>a+f.amount_paid,0);
+    stats = [
+      { icon:'👨‍🏫', val:teachers, label:'Teachers', color:'var(--violet2)', sub:'Active staff' },
+      { icon:'🎓', val:students, label:'Students', color:'var(--cyan)', sub:'Enrolled learners' },
+      { icon:'📚', val:(courses.data||[]).length, label:'Courses', color:'var(--green)', sub:`${(exams.data||[]).length} exams` },
+      { icon:'💰', val:fmtMoney(collected), label:'Fee Collected', color:'var(--amber)', sub:`of ${fmtMoney(totalFee)}` },
+    ];
+    body = `<div class="g2 mt-2" style="margin-top:20px">
+      <div class="card">
+        <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:14px;">📊 Fee Collection</div>
+        <div class="highlight-box">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span style="font-size:13px;color:var(--text2)">Collected</span>
+            <span style="font-family:'DM Mono',monospace;color:var(--green)">${fmtMoney(collected)}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span style="font-size:13px;color:var(--text2)">Pending</span>
+            <span style="font-family:'DM Mono',monospace;color:var(--red2)">${fmtMoney(totalFee-collected)}</span>
+          </div>
+          <div class="prog-bar" style="margin-top:10px"><div class="prog-fill" style="width:${totalFee?Math.round(collected/totalFee*100):0}%"></div></div>
+          <div style="font-size:11px;color:var(--text3);margin-top:6px">${totalFee?Math.round(collected/totalFee*100):0}% collected</div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:14px;">📋 Quick Stats</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--text2)">Total Submissions</span><span style="font-family:'DM Mono',monospace">${(subs.data||[]).length}</span></div>
+          <div class="divider" style="margin:0"></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--text2)">Total Enrollments</span><span style="font-family:'DM Mono',monospace">${(enr.data||[]).length}</span></div>
+          <div class="divider" style="margin:0"></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--text2)">Active Courses</span><span style="font-family:'DM Mono',monospace;color:var(--cyan)">${(courses.data||[]).length}</span></div>
+        </div>
+      </div>
+    </div>`;
+  } else if (role === 'teacher') {
+    const [courses, subs] = await Promise.all([
+      db.from('devo_courses').select('id').eq('teacher_id', currentUser.id),
+      db.from('devo_submissions').select('id,score,total_marks'),
+    ]);
+    const courseIds = (courses.data||[]).map(c=>c.id);
+    const { data: exams } = courseIds.length ? await db.from('devo_exams').select('id').in('course_id',courseIds) : {data:[]};
+    stats = [
+      { icon:'📚', val:(courses.data||[]).length, label:'My Courses', color:'var(--cyan)' },
+      { icon:'📝', val:(exams||[]).length, label:'My Exams', color:'var(--violet2)' },
+      { icon:'📋', val:(subs.data||[]).length, label:'Total Submissions', color:'var(--green)' },
+      { icon:'🎓', val:'—', label:'Students', color:'var(--amber)' },
+    ];
+  } else {
+    const [enr, subs, atts] = await Promise.all([
+      db.from('devo_enrollments').select('id').eq('student_id',currentUser.id),
+      db.from('devo_submissions').select('id,score,total_marks').eq('student_id',currentUser.id),
+      db.from('devo_attendance').select('status').eq('student_id',currentUser.id),
+    ]);
+    const avg = (subs.data||[]).length ? Math.round(subs.data.reduce((a,s)=>a+(s.total_marks?s.score/s.total_marks*100:0),0)/subs.data.length) : 0;
+    const present = (atts.data||[]).filter(a=>a.status==='present').length;
+    const attPct = (atts.data||[]).length ? Math.round(present/(atts.data||[]).length*100) : 0;
+    stats = [
+      { icon:'🎯', val:(enr.data||[]).length, label:'Enrolled Courses', color:'var(--cyan)' },
+      { icon:'📝', val:(subs.data||[]).length, label:'Exams Taken', color:'var(--violet2)' },
+      { icon:'📈', val:avg+'%', label:'Avg Score', color:'var(--green)' },
+      { icon:'📅', val:attPct+'%', label:'Attendance', color:'var(--amber)' },
+    ];
+  }
+
+  document.getElementById('statsGrid').innerHTML = stats.map(s=>`
+    <div class="stat-card">
+      <div class="stat-icon">${s.icon}</div>
+      <div class="stat-val" style="color:${s.color}">${s.val}</div>
+      <div class="stat-label">${s.label}</div>
+      ${s.sub?`<div class="stat-sub">${s.sub}</div>`:''}
+    </div>`).join('');
+
+  document.getElementById('homeBody').innerHTML = body + `<div class="card" style="margin-top:20px">
+    <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:4px;">👋 Welcome back, ${currentUser.full_name}!</div>
+    <div style="font-size:13px;color:var(--text2)">Logged in as <span style="color:var(--cyan);font-weight:600">${currentUser.role}</span>. Use the sidebar to navigate the system.</div>
+  </div>`;
+  loader(false);
+}
+
+// ═══════════════════════════════════════
+// ADMIN: COURSE CATALOG MANAGEMENT
+// ═══════════════════════════════════════
+async function renderAdminCourses() {
+  loader(true);
+  const { data: courses } = await db.from('devo_courses')
+    .select('*, devo_users(full_name)')
+    .order('created_at', {ascending: true});
+  loader(false);
+
+  const catColors = {
+    'Computer Basics':'b-cyan','Typing':'b-gray','MS Office':'b-violet',
+    'Python':'b-green','Web Development':'b-cyan','Design':'b-pink',
+    'Digital Marketing':'b-amber','Other':'b-gray'
+  };
+
+  setMain(`
+    <div class="topbar">
+      <h2>📚 Courses & Catalog</h2>
+      <div class="topbar-actions">
+        <button class="btn btn-amber btn-sm" onclick="showCourseCatalogPreview()">👁 Catalog View</button>
+        <button class="btn btn-success btn-sm" onclick="seedDevoCoursesIntoDB()">🌱 Seed Brochure Courses</button>
+        <button class="btn btn-primary btn-sm" onclick="showCreateCourseModal()">+ New Course</button>
+      </div>
+    </div>
+
+    <!-- Brochure Quick Reference -->
+    <div class="card" style="margin-bottom:20px;border-color:rgba(0,229,255,.2);background:linear-gradient(135deg,rgba(0,229,255,.03),rgba(124,58,237,.03))">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <span style="font-size:20px">📋</span>
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700">Devomatic Standard Course Catalog</div>
+          <div style="font-size:12px;color:var(--text2)">7 individual courses + 6 combo packages from the brochure</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="toggleBrochureRef()">Toggle Reference</button>
+      </div>
+      <div id="brochureRef" class="hidden">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:12px">
+          ${DEVO_COURSES.map(c=>`
+            <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);padding:10px">
+              <div style="font-size:18px;margin-bottom:4px">${c.icon}</div>
+              <div style="font-size:12px;font-weight:600">${c.title}</div>
+              <div style="font-family:'DM Mono',monospace;color:var(--amber);font-size:13px;margin-top:4px">${fmtMoney(c.fee)}</div>
+              <div style="font-size:10px;color:var(--text3);margin-top:2px">⏱ ${c.duration_weeks}w</div>
+            </div>`).join('')}
+        </div>
+        <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:8px;letter-spacing:.5px">COMBO PACKAGES</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">
+          ${DEVO_COMBOS.map(c=>`
+            <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);padding:10px">
+              <div style="font-size:11px;font-weight:700;color:${c.color}">${c.name}</div>
+              <div style="font-size:10px;color:var(--text3);margin-top:3px">${c.courses}</div>
+              <div style="font-family:'DM Mono',monospace;color:var(--amber);font-size:13px;margin-top:6px">${fmtMoney(c.fee)}</div>
+              <div style="font-size:10px;color:var(--green)">Save ${fmtMoney(c.save)}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- Courses Table -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700">All Courses in Database (${(courses||[]).length})</div>
+      </div>
+      ${!(courses||[]).length
+        ? `<div class="empty" style="padding:32px"><div class="ei">📚</div><p>No courses yet</p><span>Click "Seed Brochure Courses" to add all standard courses, or "+ New Course" to create custom ones.</span></div>`
+        : `<div class="tbl-wrap"><table>
+          <thead><tr><th>#</th><th>Title</th><th>Category</th><th>Fee</th><th>Duration</th><th>Difficulty</th><th>Teacher</th><th>Actions</th></tr></thead>
+          <tbody>${courses.map((c,i)=>`<tr>
+            <td style="color:var(--text3);font-family:'DM Mono',monospace;font-size:11px">${i+1}</td>
+            <td>
+              <div style="font-weight:600;font-size:13px">${c.title}</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px">${(c.description||'').slice(0,60)}${(c.description||'').length>60?'...':''}</div>
+            </td>
+            <td><span class="badge ${catColors[c.category]||'b-gray'}">${c.category||'General'}</span></td>
+            <td style="font-family:'DM Mono',monospace;color:var(--amber);font-size:13px">${c.fee ? fmtMoney(c.fee) : '—'}</td>
+            <td style="font-size:12px;color:var(--text2)">${c.duration_weeks?c.duration_weeks+'w':'—'}</td>
+            <td><span class="badge ${c.difficulty==='beginner'?'b-green':c.difficulty==='advanced'?'b-red':'b-amber'}">${c.difficulty||'—'}</span></td>
+            <td style="font-size:12px;color:var(--text2)">${c.devo_users?.full_name||'—'}</td>
+            <td>
+              <div style="display:flex;gap:4px">
+                <button class="btn btn-ghost btn-xs" onclick="showEditCourseModal('${c.id}')">Edit</button>
+                <button class="btn btn-violet btn-xs" onclick="openCourseEditor('${c.id}','${c.title.replace(/'/g,"\\'")}')">Lessons</button>
+                <button class="btn btn-danger btn-xs" onclick="adminDeleteCourse('${c.id}','${c.title.replace(/'/g,"\\'")}')">Del</button>
+              </div>
+            </td>
+          </tr>`).join('')}</tbody>
+        </table></div>`}
+    </div>`);
+}
+
+function toggleBrochureRef() {
+  const el = document.getElementById('brochureRef');
+  el.classList.toggle('hidden');
+}
+
+function showCourseCatalogPreview() {
+  const m = document.createElement('div'); m.className='modal-overlay';
+  m.innerHTML=`<div class="modal modal-xl" style="max-height:90vh;overflow-y:auto">
+    <div class="modal-head">
+      <h3>📋 Devomatic Course Catalog</h3>
+      <div class="modal-x" onclick="this.closest('.modal-overlay').remove()">×</div>
+    </div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:16px">All courses offered by Devomatic Learning Center</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px">
+      ${DEVO_COURSES.map(c=>`
+        <div class="course-card">
+          <div style="font-size:28px;margin-bottom:8px">${c.icon}</div>
+          <h3>${c.title}</h3>
+          <div style="margin-top:6px;display:flex;flex-direction:column;gap:3px">
+            ${c.topics.map(t=>`<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2)"><span style="color:var(--cyan)">•</span>${t}</div>`).join('')}
+          </div>
+          <div class="course-meta">
+            <span class="badge b-cyan">${c.category}</span>
+            <span>⏱ ${c.duration_weeks}w</span>
+          </div>
+          <div class="course-fee">${fmtMoney(c.fee)}</div>
+        </div>`).join('')}
+    </div>
+    <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:12px">🎁 Combo Packages</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+      ${DEVO_COMBOS.map(c=>`
+        <div class="combo-card" style="border-color:${c.color}22">
+          <div class="combo-badge" style="background:${c.color}22;color:${c.color}">${c.name}</div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:8px">${c.courses}</div>
+          <div style="font-family:'DM Mono',monospace;font-size:18px;color:var(--amber)">${fmtMoney(c.fee)}</div>
+          <div class="combo-save">Save ${fmtMoney(c.save)}</div>
+        </div>`).join('')}
+    </div>
+  </div>`;
+  document.body.appendChild(m);
+}
+
+function showCreateCourseModal() {
+  const m = document.createElement('div'); m.className='modal-overlay'; m.id='createCourseModal';
+  m.innerHTML=`<div class="modal modal-lg">
+    <div class="modal-head"><h3>➕ Create New Course</h3><div class="modal-x" onclick="this.closest('.modal-overlay').remove()">×</div></div>
+
+    <div class="fg"><label>Course Title *</label><input id="cc_title" placeholder="e.g. Web Development Fundamentals"></div>
+
+    <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px;letter-spacing:.5px">OR PICK FROM STANDARD CATALOG:</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px">
+      ${DEVO_COURSES.map(c=>`
+        <button class="btn btn-ghost btn-xs" style="justify-content:flex-start;gap:6px" onclick="autofillCourse(${JSON.stringify(c).replace(/"/g,'&quot;')})">
+          ${c.icon} ${c.title}
+        </button>`).join('')}
+    </div>
+    <div class="divider"></div>
+
+    <div class="fg-row">
+      <div class="fg"><label>Category</label>
+        <select id="cc_cat">
+          <option>Computer Basics</option><option>Typing</option><option>MS Office</option>
+          <option>Python</option><option>Web Development</option><option>Design</option>
+          <option>Digital Marketing</option><option>Data Science</option><option>Machine Learning</option>
+          <option>Mobile Development</option><option>DSA</option><option>DevOps</option><option>Other</option>
+        </select>
+      </div>
+      <div class="fg"><label>Difficulty</label>
+        <select id="cc_diff"><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option></select>
+      </div>
+    </div>
+    <div class="fg"><label>Description</label><textarea id="cc_desc" placeholder="Course description, topics covered..."></textarea></div>
+    <div class="fg-row">
+      <div class="fg"><label>Duration (weeks)</label><input id="cc_dur" type="number" placeholder="8"></div>
+      <div class="fg"><label>Course Fee (₹)</label><input id="cc_fee" type="number" placeholder="6000"></div>
+    </div>
+    <div class="fg"><label>Assign Teacher</label><select id="cc_teacher"><option value="">Loading teachers...</option></select></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+      <button class="btn btn-primary" onclick="adminCreateCourse()">Create Course</button>
+    </div>
+  </div>`;
+  document.body.appendChild(m);
+  db.from('devo_users').select('id,full_name').eq('role','teacher').then(({data})=>{
+    document.getElementById('cc_teacher').innerHTML =
+      `<option value="${currentUser.id}">${currentUser.full_name} (Admin)</option>` +
+      (data||[]).map(t=>`<option value="${t.id}">${t.full_name}</option>`).join('');
+  });
+}
+
+function autofillCourse(c) {
+  document.getElementById('cc_title').value = c.title;
+  document.getElementById('cc_desc').value = c.description;
+  document.getElementById('cc_cat').value = c.category;
+  document.getElementById('cc_diff').value = c.difficulty;
+  document.getElementById('cc_dur').value = c.duration_weeks;
+  document.getElementById('cc_fee').value = c.fee;
+}
+
+async function adminCreateCourse() {
+  const title = document.getElementById('cc_title').value.trim();
+  const category = document.getElementById('cc_cat').value;
+  const description = document.getElementById('cc_desc').value.trim();
+  const difficulty = document.getElementById('cc_diff').value;
+  const duration_weeks = parseInt(document.getElementById('cc_dur').value)||null;
+  const fee = parseFloat(document.getElementById('cc_fee').value)||null;
+  const teacher_id = document.getElementById('cc_teacher').value || currentUser.id;
+  if (!title) return toast('Course title required','error');
+  loader(true);
+  const { data, error } = await db.from('devo_courses').insert({title,category,description,teacher_id,difficulty,duration_weeks,fee}).select().single();
+  loader(false);
+  if (error) return toast(error.message,'error');
+  document.getElementById('createCourseModal').remove();
+  toast(`Course "${title}" created!`,'success');
+  renderAdminCourses();
+}
+
+async function showEditCourseModal(id) {
+  const { data: c } = await db.from('devo_courses').select('*').eq('id',id).single();
+  if (!c) return;
+  const m = document.createElement('div'); m.className='modal-overlay'; m.id='editCourseModal';
+  m.innerHTML=`<div class="modal modal-lg">
+    <div class="modal-head"><h3>✏️ Edit Course</h3><div class="modal-x" onclick="this.closest('.modal-overlay').remove()">×</div></div>
+    <div class="fg"><label>Course Title *</label><input id="ec_title" value="${c.title}"></div>
+    <div class="fg-row">
+      <div class="fg"><label>Category</label>
+        <select id="ec_cat">
+          <option ${c.category==='Computer Basics'?'selected':''}>Computer Basics</option>
+          <option ${c.category==='Typing'?'selected':''}>Typing</option>
+          <option ${c.category==='MS Office'?'selected':''}>MS Office</option>
+          <option ${c.category==='Python'?'selected':''}>Python</option>
+          <option ${c.category==='Web Development'?'selected':''}>Web Development</option>
+          <option ${c.category==='Design'?'selected':''}>Design</option>
+          <option ${c.category==='Digital Marketing'?'selected':''}>Digital Marketing</option>
+          <option ${c.category==='Data Science'?'selected':''}>Data Science</option>
+          <option ${c.category==='Other'?'selected':''}>Other</option>
+        </select>
+      </div>
+      <div class="fg"><label>Difficulty</label>
+        <select id="ec_diff">
+          <option value="beginner" ${c.difficulty==='beginner'?'selected':''}>Beginner</option>
+          <option value="intermediate" ${c.difficulty==='intermediate'?'selected':''}>Intermediate</option>
+          <option value="advanced" ${c.difficulty==='advanced'?'selected':''}>Advanced</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg"><label>Description</label><textarea id="ec_desc">${c.description||''}</textarea></div>
+    <div class="fg-row">
+      <div class="fg"><label>Duration (weeks)</label><input id="ec_dur" type="number" value="${c.duration_weeks||''}"></div>
+      <div class="fg"><label>Course Fee (₹)</label><input id="ec_fee" type="number" value="${c.fee||''}"></div>
+    </div>
+    <div class="fg"><label>Assign Teacher</label><select id="ec_teacher"><option value="">Loading...</option></select></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+      <button class="btn btn-primary" onclick="adminUpdateCourse('${id}')">Save Changes</button>
+    </div>
+  </div>`;
+  document.body.appendChild(m);
+  db.from('devo_users').select('id,full_name').in('role',['teacher','admin']).then(({data})=>{
+    document.getElementById('ec_teacher').innerHTML = (data||[]).map(t=>`<option value="${t.id}" ${t.id===c.teacher_id?'selected':''}>${t.full_name}</option>`).join('');
+  });
+}
+
+async function adminUpdateCourse(id) {
+  const updates = {
+    title: document.getElementById('ec_title').value.trim(),
+    category: document.getElementById('ec_cat').value,
+    description: document.getElementById('ec_desc').value.trim(),
+    difficulty: document.getElementById('ec_diff').value,
+    duration_weeks: parseInt(document.getElementById('ec_dur').value)||null,
+    fee: parseFloat(document.getElementById('ec_fee').value)||null,
+    teacher_id: document.getElementById('ec_teacher').value||currentUser.id,
+  };
+  if (!updates.title) return toast('Title required','error');
+  loader(true);
+  const { error } = await db.from('devo_courses').update(updates).eq('id',id);
+  loader(false);
+  if (error) return toast(error.message,'error');
+  document.getElementById('editCourseModal').remove();
+  toast('Course updated!','success');
+  renderAdminCourses();
+}
+
+async function adminDeleteCourse(id, title) {
+  if (!confirm(`Delete course "${title}"? This will remove all lessons too.`)) return;
+  loader(true);
+  await db.from('devo_lessons').delete().eq('course_id',id);
+  await db.from('devo_courses').delete().eq('id',id);
+  loader(false);
+  toast(`"${title}" deleted`,'success');
+  renderAdminCourses();
+}
+
+// ═══════════════════════════════════════
+// ADMIN: MANAGE USERS
+// ═══════════════════════════════════════
+async function renderManageUsers() {
+  loader(true);
+  const { data: users } = await db.from('devo_users').select('*').order('created_at',{ascending:false});
+  loader(false);
+  setMain(`
+    <div class="topbar">
+      <h2>👥 Users</h2>
+      <div class="topbar-actions">
+        <button class="btn btn-primary btn-sm" onclick="showCreateUserModal()">+ Create User</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Email</th><th>Phone</th><th>Joined</th><th>Actions</th></tr></thead>
+        <tbody>${(users||[]).map(u=>`<tr>
+          <td><strong>${u.full_name}</strong></td>
+          <td><code style="font-family:'DM Mono',monospace;font-size:12px;color:var(--cyan)">${u.username}</code></td>
+          <td><span class="badge ${u.role==='admin'?'b-cyan':u.role==='teacher'?'b-violet':'b-green'}">${u.role}</span></td>
+          <td style="color:var(--text2);font-size:12px">${u.email||'—'}</td>
+          <td style="color:var(--text2);font-size:12px">${u.phone||'—'}</td>
+          <td style="color:var(--text3);font-size:12px">${fmtDate(u.created_at)}</td>
+          <td>
+            ${u.role!=='admin'
+              ? `<div style="display:flex;gap:4px">
+                  <button class="btn btn-ghost btn-xs" onclick="editUserModal('${u.id}')">Edit</button>
+                  <button class="btn btn-danger btn-xs" onclick="deleteUser('${u.id}','${u.full_name.replace(/'/g,"\\'")}')">Del</button>
+                 </div>`
+              : '<span style="font-size:11px;color:var(--text3)">Protected</span>'}
+          </td>
+        </tr>`).join('')}</tbody>
+      </table></div>
+    </div>`);
+}
+
+function showCreateUserModal() {
+  const m = document.createElement('div');
+  m.className='modal-overlay'; m.id='cuModal';
+  m.innerHTML=`<div class="modal">
+    <div class="modal-head"><h3>Create User</h3><div class="modal-x" onclick="this.closest('.modal-overlay').remove()">×</div></div>
+    <div class="fg-row"><div class="fg"><label>Full Name *</label><input id="cu_name" placeholder="John Doe"></div><div class="fg"><label>Username *</label><input id="cu_user" placeholder="john_doe"></div></div>
+    <div class="fg-row"><div class="fg"><label>Password *</label><input type="password" id="cu_pass" placeholder="Password"></div><div class="fg"><label>Role</label><select id="cu_role"><option value="teacher">👨‍🏫 Teacher</option><option value="student">🎓 Student</option></select></div></div>
+    <div class="fg-row"><div class="fg"><label>Email</label><input id="cu_email" type="email" placeholder="email@example.com"></div><div class="fg"><label>Phone</label><input id="cu_phone" placeholder="+91 99999 99999"></div></div>
+    <div class="fg"><label>Address</label><input id="cu_addr" placeholder="City, State"></div>
+    <div id="cu_fee_section" style="display:none">
+      <div class="divider"></div>
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:12px;">💰 Fee Details</div>
+      <div class="fg"><label>Course Enrolled</label><select id="cu_course"><option value="">Select course...</option></select></div>
+      <div class="fg-row">
+        <div class="fg"><label>Total Fee (₹)</label><input id="cu_totalfee" type="number" placeholder="Auto-fills from course"></div>
+        <div class="fg"><label>Amount Paid (₹)</label><input id="cu_paid" type="number" placeholder="0"></div>
+      </div>
+      <div class="fg"><label>Due Date</label><input id="cu_duedate" type="date"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+      <button class="btn btn-primary" onclick="createUser()">Create</button>
+    </div>
+  </div>`;
+  document.body.appendChild(m);
+  document.getElementById('cu_role').addEventListener('change', async function() {
+    const fs = document.getElementById('cu_fee_section');
+    fs.style.display = this.value === 'student' ? 'block' : 'none';
+    if (this.value === 'student') {
+      const { data: courses } = await db.from('devo_courses').select('id,title,fee');
+      document.getElementById('cu_course').innerHTML = '<option value="">Select course...</option>' + (courses||[]).map(c=>`<option value="${c.id}" data-fee="${c.fee||0}">${c.title}${c.fee?' — '+fmtMoney(c.fee):''}</option>`).join('');
+      document.getElementById('cu_course').addEventListener('change', function() {
+        const opt = this.options[this.selectedIndex];
+        const fee = opt.getAttribute('data-fee');
+        if (fee) document.getElementById('cu_totalfee').value = fee;
+      });
+    }
+  });
+}
+
+async function createUser() {
+  const full_name = document.getElementById('cu_name').value.trim();
+  const username = document.getElementById('cu_user').value.trim();
+  const password = document.getElementById('cu_pass').value.trim();
+  const email = document.getElementById('cu_email').value.trim();
+  const phone = document.getElementById('cu_phone').value.trim();
+  const address = document.getElementById('cu_addr').value.trim();
+  const role = document.getElementById('cu_role').value;
+  if (!full_name||!username||!password) return toast('Fill required fields','error');
+  loader(true);
+  const { data: user, error } = await db.from('devo_users').insert({full_name,username,password,email,phone,address,role}).select().single();
+  if (error) { loader(false); return toast(error.message,'error'); }
+
+  if (role === 'student') {
+    const total_fee = parseFloat(document.getElementById('cu_totalfee').value)||0;
+    const amount_paid = parseFloat(document.getElementById('cu_paid').value)||0;
+    const course_id = document.getElementById('cu_course').value||null;
+    const due_date = document.getElementById('cu_duedate').value||null;
+    if (total_fee > 0) {
+      const status = amount_paid >= total_fee ? 'paid' : amount_paid > 0 ? 'partial' : 'unpaid';
+      await db.from('devo_fees').insert({student_id:user.id,total_fee,amount_paid,status,due_date,course_id});
+    }
+    if (course_id) await db.from('devo_enrollments').insert({student_id:user.id,course_id});
+  }
+  loader(false);
+  document.getElementById('cuModal').remove();
+  toast(`User "${full_name}" created!`,'success');
+  renderManageUsers();
+}
+
+async function editUserModal(id) {
+  const { data: u } = await db.from('devo_users').select('*').eq('id',id).single();
+  if (!u) return;
+  const m = document.createElement('div');
+  m.className='modal-overlay'; m.id='euModal';
+  m.innerHTML=`<div class="modal">
+    <div class="modal-head"><h3>Edit User</h3><div class="modal-x" onclick="this.closest('.modal-overlay').remove()">×</div></div>
+    <div class="fg-row">
+      <div class="fg"><label>Full Name</label><input id="eu_name" value="${u.full_name}"></div>
+      <div class="fg"><label>Email</label><input id="eu_email" value="${u.email||''}"></div>
+    </div>
+    <div class="fg-row">
+      <div class="fg"><label>Phone</label><input id="eu_phone" value="${u.phone||''}"></div>
+      <div class="fg"><label>New Password</label><input type="password" id="eu_pass" placeholder="Leave blank to keep"></div>
+    </div>
+    <div class="fg"><label>Address</label><input id="eu_addr" value="${u.address||''}"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+      <button class="btn btn-primary" onclick="updateUser('${id}')">Save</button>
+    </div>
+  </div>`;
+  document.body.appendChild(m);
+}
+
+async function updateUser(id) {
+  const updates = {
+    full_name: document.getElementById('eu_name').value.trim(),
+    email: document.getElementById('eu_email').value.trim(),
+    phone: document.getElementById('eu_phone').value.trim(),
+    address: document.getElementById('eu_addr').value.trim(),
+  };
+  const pass = document.getElementById('eu_pass').value.trim();
+  if (pass) updates.password = pass;
+  loader(true);
+  const { error } = await db.from('devo_users').update(updates).eq('id',id);
+  loader(false);
+  if (error) return toast(error.message,'error');
+  document.getElementById('euModal').remove();
+  toast('User updated!','success');
+  renderManageUsers();
+}
+
+async function deleteUser(id, name) {
+  if (!confirm(`Delete "${name}"?`)) return;
+  loader(true);
+  await db.from('devo_users').delete().eq('id',id);
+  loader(false);
+  toast(`"${name}" deleted`,'success');
+  renderManageUsers();
+}
+
+// ═══════════════════════════════════════
+// FEE MANAGER (Admin)
+// ═══════════════════════════════════════
+async function renderFeeManager() {
+  loader(true);
+  const { data: fees } = await db.from('devo_fees')
+    .select('*, devo_users(full_name,email,phone), devo_courses(title,fee)')
+    .order('created_at',{ascending:false});
+  loader(false);
+  const total = (fees||[]).reduce((a,f)=>a+f.total_fee,0);
+  const paid = (fees||[]).reduce((a,f)=>a+f.amount_paid,0);
+  const pending = total - paid;
+
+  setMain(`
+    <div class="topbar">
+      <h2>💰 Fee Manager</h2>
+      <div class="topbar-actions">
+        <button class="btn btn-primary btn-sm" onclick="showAddFeeModal()">+ Add Fee Record</button>
+      </div>
+    </div>
+    <div class="g3" style="margin-bottom:20px">
+      <div class="stat-card"><div class="stat-icon">💵</div><div class="stat-val" style="color:var(--amber)">${fmtMoney(total)}</div><div class="stat-label">Total Fee Expected</div></div>
+      <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-val" style="color:var(--green)">${fmtMoney(paid)}</div><div class="stat-label">Amount Collected</div></div>
+      <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-val" style="color:var(--red2)">${fmtMoney(pending)}</div><div class="stat-label">Pending Amount</div></div>
+    </div>
+    <div class="card">
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Student</th><th>Course</th><th>Course Fee</th><th>Total Fee</th><th>Paid</th><th>Pending</th><th>Status</th><th>Due Date</th><th>Actions</th></tr></thead>
+        <tbody>${(fees||[]).map(f=>{
+          const pen = f.total_fee - f.amount_paid;
+          return `<tr>
+            <td>
+              <div style="font-weight:600;font-size:13px">${f.devo_users?.full_name||'—'}</div>
+              <div style="font-size:11px;color:var(--text3)">${f.devo_users?.phone||''}</div>
+            </td>
+            <td style="font-size:12px;color:var(--text2)">${f.devo_courses?.title||'—'}</td>
+            <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${f.devo_courses?.fee?fmtMoney(f.devo_courses.fee):'—'}</td>
+            <td style="font-family:'DM Mono',monospace">${fmtMoney(f.total_fee)}</td>
+            <td style="font-family:'DM Mono',monospace;color:var(--green)">${fmtMoney(f.amount_paid)}</td>
+            <td style="font-family:'DM Mono',monospace;color:${pen>0?'var(--red2)':'var(--green)'}">${fmtMoney(pen)}</td>
+            <td><span class="fee-${f.status}">${f.status==='paid'?'✓ Paid':f.status==='partial'?'◑ Partial':'✗ Unpaid'}</span></td>
+            <td style="font-size:12px;color:${f.due_date&&new Date(f.due_date)<new Date()?'var(--red2)':'var(--text3)'}">${fmtDate(f.due_date)}</td>
+            <td>
+              <div style="display:flex;gap:4px">
+                <button class="btn btn-success btn-xs" onclick="recordPaymentModal('${f.id}','${f.devo_users?.full_name||''}',${f.amount_paid},${f.total_fee})">+ Pay</button>
+                <button class="btn btn-danger btn-xs" onclick="deleteFee('${f.id}')">Del</button>
+              </div>
+            </td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>
+    </div>`);
+}
+
+function showAddFeeModal() {
+  const m = document.createElement('div');
+  m.className='modal-overlay'; m.id='afModal';
+  m.innerHTML=`<div class="modal">
+    <div class="modal-head"><h3>Add Fee Record</h3><div class="modal-x" onclick="this.closest('.modal-overlay').remove()">×</div></div>
+    <div class="fg"><label>Student</label><select id="af_student"><option value="">Loading...</option></select></div>
+    <div class="fg"><label>Course</label><select id="af_course"><option value="">Select course...</option></select></div>
+    <div class="fg-row">
+      <div class="fg"><label>Total Fee (₹) <span style="color:var(--text3);font-size:10px">auto-fills from course</span></label><input id="af_total" type="number" placeholder="15000"></div>
+      <div class="fg"><label>Amount Paid (₹)</label><input id="af_paid" type="number" placeholder="0"></div>
+    </div>
+    <div class="fg"><label>Due Date</label><input id="af_due" type="date"></div>
+    <div class="fg"><label>Notes</label><textarea id="af_notes" placeholder="Optional notes..."></textarea></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveFeeRecord()">Save</button>
+    </div>
+  </div>`;
+  document.body.appendChild(m);
+  Promise.all([
+    db.from('devo_users').select('id,full_name').eq('role','student'),
+    db.from('devo_courses').select('id,title,fee'),
+  ]).then(([students,courses])=>{
+    document.getElementById('af_student').innerHTML = '<option value="">Select student...</option>' + (students.data||[]).map(s=>`<option value="${s.id}">${s.full_name}</option>`).join('');
+    document.getElementById('af_course').innerHTML = '<option value="">Select course...</option>' + (courses.data||[]).map(c=>`<option value="${c.id}" data-fee="${c.fee||0}">${c.title}${c.fee?' — '+fmtMoney(c.fee):''}</option>`).join('');
+    document.getElementById('af_course').addEventListener('change', function(){
+      const fee = this.options[this.selectedIndex].getAttribute('data-fee');
+      if (fee && fee!=='0') document.getElementById('af_total').value = fee;
+    });
+  });
+}
+
+async function saveFeeRecord() {
+  const student_id = document.getElementById('af_student').value;
+  const course_id = document.getElementById('af_course').value||null;
+  const total_fee = parseFloat(document.getElementById('af_total').value)||0;
+  const amount_paid = parseFloat(document.getElementById('af_paid').value)||0;
+  const due_date = document.getElementById('af_due').value||null;
+  const notes = document.getElementById('af_notes').value.trim();
+  if (!student_id||!total_fee) return toast('Select student and enter total fee','error');
+  const status = amount_paid>=total_fee?'paid':amount_paid>0?'partial':'unpaid';
+  loader(true);
+  const { error } = await db.from('devo_fees').insert({student_id,course_id,total_fee,amount_paid,status,due_date,notes});
+  loader(false);
+  if (error) return toast(error.message,'error');
+  document.getElementById('afModal').remove();
+  toast('Fee record added!','success');
+  renderFeeManager();
+}
+
+function recordPaymentModal(feeId, name, paid, total) {
+  const remaining = total - paid;
+  const m = document.createElement('div');
+  m.className='modal-overlay'; m.id='rpModal';
+  m.innerHTML=`<div class="modal">
+    <div class="modal-head"><h3>Record Payment — ${name}</h3><div class="modal-x" onclick="this.closest('.modal-overlay').remove()">×</div></div>
+    <div class="highlight-box" style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--text2)">Already Paid</span><span style="color:var(--green);font-family:'DM Mono',monospace">${fmtMoney(paid)}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:6px"><span style="color:var(--text2)">Remaining</span><span style="color:var(--red2);font-family:'DM Mono',monospace">${fmtMoney(remaining)}</span></div>
+    </div>
+    <div class="fg"><label>Payment Amount (₹)</label><input id="rp_amount" type="number" placeholder="${remaining}" max="${remaining}"></div>
+    <div class="fg"><label>Payment Method</label><select id="rp_method"><option>Cash</option><option>UPI</option><option>Bank Transfer</option><option>Cheque</option></select></div>
+    <div class="fg"><label>Notes</label><input id="rp_note" placeholder="Transaction ID, ref. etc."></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+      <button class="btn btn-success" onclick="recordPayment('${feeId}',${paid},${total})">Record Payment</button>
+    </div>
+  </div>`;
+  document.body.appendChild(m);
+}
+
+async function recordPayment(feeId, alreadyPaid, totalFee) {
+  const amt = parseFloat(document.getElementById('rp_amount').value)||0;
+  if (amt <= 0) return toast('Enter valid amount','error');
+  const newPaid = alreadyPaid + amt;
+  const status = newPaid >= totalFee ? 'paid' : 'partial';
+  loader(true);
+  await db.from('devo_fees').update({amount_paid:newPaid,status}).eq('id',feeId);
+  loader(false);
+  document.getElementById('rpModal').remove();
+  toast(`Payment of ${fmtMoney(amt)} recorded!`,'success');
+  renderFeeManager();
+}
+
+async function deleteFee(id) {
+  if (!confirm('Delete this fee record?')) return;
+  loader(true); await db.from('devo_fees').delete().eq('id',id); loader(false);
+  toast('Deleted','success'); renderFeeManager();
+}
+
+// ═══════════════════════════════════════
+// ATTENDANCE REPORT (Admin)
+// ═══════════════════════════════════════
+async function renderAttendanceReport() {
+  loader(true);
+  const { data: atts } = await db.from('devo_attendance')
+    .select('*, devo_users(full_name), devo_courses(title)')
+    .order('date',{ascending:false}).limit(200);
+  loader(false);
+  const grouped = {};
+  (atts||[]).forEach(a => {
+    const key = a.devo_users?.full_name||'?';
+    if (!grouped[key]) grouped[key] = {present:0,absent:0,late:0,total:0};
+    grouped[key][a.status] = (grouped[key][a.status]||0)+1;
+    grouped[key].total++;
+  });
+  setMain(`
+    <div class="topbar"><h2>📅 Attendance Report</h2></div>
+    <div class="g2" style="margin-bottom:20px">
+      <div class="card">
+        <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:14px;">Student Summary</div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Student</th><th>Present</th><th>Absent</th><th>Late</th><th>%</th></tr></thead>
+          <tbody>${Object.entries(grouped).map(([name,d])=>{
+            const p = d.total ? Math.round(d.present/d.total*100) : 0;
+            return `<tr>
+              <td><strong>${name}</strong></td>
+              <td style="color:var(--green)">${d.present}</td>
+              <td style="color:var(--red2)">${d.absent}</td>
+              <td style="color:var(--amber)">${d.late}</td>
+              <td style="color:${p>=75?'var(--green)':p>=50?'var(--amber)':'var(--red2)'}">
+                <strong>${p}%</strong>
+              </td>
+            </tr>`;}).join('')}
+          </tbody>
+        </table></div>
+      </div>
+      <div class="card">
+        <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:14px;">Recent Records</div>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Student</th><th>Date</th><th>Course</th><th>Status</th></tr></thead>
+          <tbody>${(atts||[]).slice(0,20).map(a=>`<tr>
+            <td style="font-size:12px">${a.devo_users?.full_name||'—'}</td>
+            <td style="font-size:12px;color:var(--text3)">${fmtDate(a.date)}</td>
+            <td style="font-size:11px;color:var(--text2)">${a.devo_courses?.title||'—'}</td>
+            <td><span class="badge ${a.status==='present'?'b-green':a.status==='late'?'b-amber':'b-red'}">${a.status}</span></td>
+          </tr>`).join('')}</tbody>
+        </table></div>
+      </div>
+    </div>`);
+}
+
+// ═══════════════════════════════════════
+// ADMIN: ALL EXAMS / SUBMISSIONS
+// ═══════════════════════════════════════
+async function renderAllExams() {
+  loader(true);
+  const { data: exams } = await db.from('devo_exams').select('*, devo_courses(title)').order('created_at',{ascending:false});
+  loader(false);
+  setMain(`
+    <div class="topbar"><h2>📝 All Exams</h2></div>
+    <div class="card"><div class="tbl-wrap"><table>
+      <thead><tr><th>Title</th><th>Course</th><th>Type</th><th>Time</th><th>Created</th></tr></thead>
+      <tbody>${(exams||[]).map(e=>`<tr>
+        <td><strong>${e.title}</strong></td>
+        <td style="color:var(--text2);font-size:12px">${e.devo_courses?.title||'—'}</td>
+        <td><span class="badge ${e.exam_type==='mcq'?'b-cyan':'b-violet'}">${e.exam_type}</span></td>
+        <td style="font-family:'DM Mono',monospace;font-size:12px">${e.time_limit}m</td>
+        <td style="color:var(--text3);font-size:12px">${fmtDate(e.created_at)}</td>
+      </tr>`).join('')}</tbody>
+    </table></div></div>`);
+}
+
+async function renderAllSubmissions() {
+  loader(true);
+  const { data: subs } = await db.from('devo_submissions').select('*, devo_users(full_name), devo_exams(title)').order('submitted_at',{ascending:false});
+  loader(false);
+  setMain(`
+    <div class="topbar"><h2>📋 All Submissions</h2></div>
+    <div class="card"><div class="tbl-wrap"><table>
+      <thead><tr><th>Student</th><th>Exam</th><th>Score</th><th>%</th><th>Result</th><th>Date</th></tr></thead>
+      <tbody>${(subs||[]).map(s=>{
+        const p = pct(s.score,s.total_marks);
+        return `<tr>
+          <td><strong>${s.devo_users?.full_name||'—'}</strong></td>
+          <td style="font-size:12px">${s.devo_exams?.title||'—'}</td>
+          <td style="font-family:'DM Mono',monospace">${s.score}/${s.total_marks}</td>
+          <td style="color:${p>=60?'var(--green)':'var(--red2)'}">${p}%</td>
+          <td><span class="badge ${p>=60?'b-green':'b-red'}">${p>=60?'PASS':'FAIL'}</span></td>
+          <td style="color:var(--text3);font-size:12px">${fmtDate(s.submitted_at)}</td>
+        </tr>`;}).join('')}</tbody>
+    </table></div></div>`);
+}
+
+// ═══════════════════════════════════════
+// TEACHER: COURSES
+// ═══════════════════════════════════════
+async function renderTeacherCourses() {
+  loader(true);
+  const { data: courses } = await db.from('devo_courses').select('*').eq('teacher_id',currentUser.id).order('created_at',{ascending:false});
+  loader(false);
+  setMain(`
+    <div class="topbar">
+      <h2>📚 My Courses</h2>
+      <div class="topbar-actions"><button class="btn btn-primary btn-sm" onclick="navigateTo('addCourse')">+ New Course</button></div>
+    </div>
+    ${!(courses||[]).length
+      ? `<div class="empty"><div class="ei">📚</div><p>No courses yet</p><span>Click "New Course" to get started</span></div>`
+      : `<div class="g3">${courses.map(c=>`
+          <div class="course-card" style="cursor:pointer" onclick="openCourseEditor('${c.id}','${c.title.replace(/'/g,"\\'")}')">
+            <span class="badge b-cyan" style="margin-bottom:10px">${c.category||'General'}</span>
+            <h3>${c.title}</h3>
+            <p>${c.description||'No description'}</p>
+            ${c.fee?`<div class="course-fee">${fmtMoney(c.fee)}</div>`:''}
+            <div class="course-meta">
+              <span>📅 ${fmtDate(c.created_at)}</span>
+              <span style="margin-left:auto;color:var(--cyan);font-size:11px">Edit →</span>
+            </div>
+          </div>`).join('')}</div>`}`);
+}
+
+function renderAddCourse() {
+  setMain(`
+    <div class="topbar"><h2>➕ New Course</h2></div>
+    <div class="card" style="max-width:580px">
+      <div class="fg"><label>Course Title *</label><input id="c_title" placeholder="e.g. Web Development Fundamentals"></div>
+      <div class="fg-row">
+        <div class="fg"><label>Category</label>
+          <select id="c_cat">
+            <option>Computer Basics</option><option>Typing</option><option>MS Office</option>
+            <option>Python</option><option>Web Development</option><option>Design</option>
+            <option>Digital Marketing</option><option>Data Science</option><option>Machine Learning</option>
+            <option>Mobile Development</option><option>DSA</option><option>DevOps</option><option>Other</option>
+          </select>
+        </div>
+        <div class="fg"><label>Difficulty</label>
+          <select id="c_diff"><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option></select>
+        </div>
+      </div>
+      <div class="fg"><label>Description</label><textarea id="c_desc" placeholder="Brief description of this course..."></textarea></div>
+      <div class="fg-row">
+        <div class="fg"><label>Duration (weeks)</label><input id="c_dur" type="number" placeholder="8"></div>
+        <div class="fg"><label>Course Fee (₹)</label><input id="c_fee" type="number" placeholder="6000"></div>
+      </div>
+      <div class="modal-foot" style="justify-content:flex-start;padding-top:0;border:none">
+        <button class="btn btn-primary" onclick="saveCourse()">Create Course</button>
+        <button class="btn btn-ghost" onclick="navigateTo('myCourses')">Cancel</button>
+      </div>
+    </div>`);
+}
+
+async function saveCourse() {
+  const title = document.getElementById('c_title').value.trim();
+  const category = document.getElementById('c_cat').value;
+  const description = document.getElementById('c_desc').value.trim();
+  const difficulty = document.getElementById('c_diff').value;
+  const duration_weeks = parseInt(document.getElementById('c_dur').value)||null;
+  const fee = parseFloat(document.getElementById('c_fee').value)||null;
+  if (!title) return toast('Course title required','error');
+  loader(true);
+  const { data, error } = await db.from('devo_courses').insert({title,category,description,teacher_id:currentUser.id,difficulty,duration_weeks,fee}).select().single();
+  loader(false);
+  if (error) return toast(error.message,'error');
+  toast('Course created!','success');
+  openCourseEditor(data.id,data.title);
+}
+
+async function openCourseEditor(courseId, courseTitle) {
+  loader(true);
+  const { data: lessons } = await db.from('devo_lessons').select('*').eq('course_id',courseId).order('lesson_order');
+  loader(false);
+  setMain(`
+    <div class="topbar">
+      <h2>✏️ ${courseTitle}</h2>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost btn-sm" onclick="${currentUser.role==='admin'?'navigateTo(\'adminCourses\')':'navigateTo(\'myCourses\')'}">← Back</button>
+        <button class="btn btn-primary btn-sm" onclick="showAddLessonModal('${courseId}','${courseTitle.replace(/'/g,"\\'")}')">+ Add Lesson</button>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:14px;">📖 Lessons (${(lessons||[]).length})</div>
+      ${!(lessons||[]).length
+        ? `<div class="empty" style="padding:24px"><div class="ei">📖</div><p>No lessons yet</p><span>Click "+ Add Lesson" to start building</span></div>`
+        : lessons.map((l,i)=>`
+          <div class="q-block" style="cursor:default">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div class="lesson-num">${i+1}</div>
+                <strong style="font-size:14px">${l.title}</strong>
+              </div>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-ghost btn-xs" onclick="showEditLessonModal('${l.id}','${l.title.replace(/'/g,"\\'")}',\`${(l.content||'').replace(/`/g,'\\`')}\`,'${courseId}','${courseTitle.replace(/'/g,"\\'")}')">Edit</button>
+                <button class="btn btn-danger btn-xs" onclick="deleteLesson('${l.id}','${courseId}','${courseTitle.replace(/'/g,"\\'")}','${l.title.replace(/'/g,"\\'")}')">Del</button>
+              </div>
+            </div>
+            <p style="font-size:12px;color:var(--text2);margin-top:6px;margin-left:32px">${(l.content||'').slice(0,140)}${(l.content||'').length>140?'...':''}</p>
+          </div>`).join('')}
+    </div>`);
+}
+
+function showAddLessonModal(courseId, courseTitle) {
+  const m = document.createElement('div'); m.className='modal-overlay'; m.id='lModal';
+  m.innerHTML=`<div class="modal modal-lg">
+    <div class="modal-head"><h3>Add Lesson</h3><div class="modal-x" onclick="this.closest('.modal-overlay').remove()">×</div></div>
+    <div class="fg"><label>Title *</label><input id="l_title" placeholder="e.g. Introduction to HTML"></div>
+    <div class="fg"><label>Content</label><textarea id="l_content" style="min-height:220px" placeholder="Write lesson content here..."></textarea></div>
+    <div class="fg"><label>Video URL (optional)</label><input id="l_video" placeholder="https://youtube.com/..."></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="document.getElementById('lModal').remove()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveLesson('${courseId}','${courseTitle.replace(/'/g,"\\'")}')">Save</button>
+    </div>
+  </div>`;
+  document.body.appendChild(m);
+}
+
+function showEditLessonModal(id, title, content, courseId, courseTitle) {
+  const m = document.createElement('div'); m.className='modal-overlay'; m.id='lModal';
+  m.innerHTML=`<div class="modal modal-lg">
+    <div class="modal-head"><h3>Edit Lesson</h3><div class="modal-x" onclick="this.closest('.modal-overlay').remove()">×</div></div>
+    <div class="fg"><label>Title *</label><input id="l_title" value="${title}"></div>
+    <div class="fg"><label>Content</label><textarea id="l_content" style="min-height:220px">${content}</textarea></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="document.getElementById('lModal').remove()">Cancel</button>
+      <button class="btn btn-primary" onclick="updateLesson('${id}','${courseId}','${courseTitle.replace(/'/g,"\\'")}')">Update</button>
+    </div>
+  </div>`;
+  document.body.appendChild(m);
+}
+
+async function saveLesson(courseId, courseTitle) {
+  const title = document.getElementById('l_title').value.trim();
+  const content = document.getElementById('l_content').value.trim();
+  if (!title) return toast('Title required','error');
+  loader(true);
+  const { data: ex } = await db.from('devo_lessons').select('lesson_order').eq('course_id',courseId).order('lesson_order',{ascending:false}).limit(1);
+  const nextOrder = (ex?.[0]?.lesson_order||0)+1;
+  const { error } = await db.from('devo_lessons').insert({course_id:courseId,title,content,lesson_order:nextOrder});
+  loader(false);
+  if (error) return toast(error.message,'error');
+  document.getElementById('lModal').remove();
+  toast('Lesson added!','success');
+  openCourseEditor(courseId,courseTitle);
+}
+
+async function updateLesson(id, courseId, courseTitle) {
+  const title = document.getElementById('l_title').value.trim();
+  const content = document.getElementById('l_content').value.trim();
+  if (!title) return toast('Title required','error');
+  loader(true);
+  const { error } = await db.from('devo_lessons').update({title,content}).eq('id',id);
+  loader(false);
+  if (error) return toast(error.message,'error');
+  document.getElementById('lModal').remove();
+  toast('Updated!','success');
+  openCourseEditor(courseId,courseTitle);
+}
+
+async function deleteLesson(id, courseId, courseTitle, title) {
+  if (!confirm(`Delete "${title}"?`)) return;
+  loader(true); await db.from('devo_lessons').delete().eq('id',id); loader(false);
+  toast('Deleted','success'); openCourseEditor(courseId,courseTitle);
+}
+
+// ═══════════════════════════════════════
+// TEACHER: ATTENDANCE
+// ═══════════════════════════════════════
+async function renderTakeAttendance() {
+  loader(true);
+  const { data: courses } = await db.from('devo_courses').select('id,title').eq('teacher_id',currentUser.id);
+  loader(false);
+  if (!(courses||[]).length) {
+    setMain(`<div class="topbar"><h2>📅 Take Attendance</h2></div><div class="empty"><div class="ei">📚</div><p>Create a course first</p></div>`);
+    return;
+  }
+  setMain(`
+    <div class="topbar"><h2>📅 Take Attendance</h2></div>
+    <div class="card" style="max-width:680px;margin-bottom:20px">
+      <div class="fg-row">
+        <div class="fg"><label>Course *</label><select id="att_course">${courses.map(c=>`<option value="${c.id}">${c.title}</option>`).join('')}</select></div>
+        <div class="fg"><label>Date *</label><input type="date" id="att_date" value="${new Date().toISOString().split('T')[0]}"></div>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="loadStudentsForAttendance()">Load Students →</button>
+    </div>
+    <div id="attGrid"></div>
+    <div id="attSave" class="hidden" style="margin-top:16px">
+      <button class="btn btn-success" onclick="saveAttendance()">💾 Save Attendance</button>
+    </div>`);
+}
+
+async function loadStudentsForAttendance() {
+  const courseId = document.getElementById('att_course').value;
+  const date = document.getElementById('att_date').value;
+  loader(true);
+  const { data: enr } = await db.from('devo_enrollments').select('student_id, devo_users(id,full_name)').eq('course_id',courseId);
+  const { data: existing } = await db.from('devo_attendance').select('student_id,status').eq('course_id',courseId).eq('date',date);
+  loader(false);
+  const students = (enr||[]).map(e=>e.devo_users).filter(Boolean);
+  if (!students.length) { document.getElementById('attGrid').innerHTML = `<div class="empty"><div class="ei">🎓</div><p>No students enrolled in this course</p></div>`; return; }
+  attendanceMap = {};
+  const existingMap = {};
+  (existing||[]).forEach(e => { existingMap[e.student_id]=e.status; });
+  students.forEach(s => { attendanceMap[s.id] = existingMap[s.id]||'present'; });
+
+  document.getElementById('attGrid').innerHTML = `<div class="card">
+    <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:14px;">Students (${students.length})</div>
+    <div class="att-grid">${students.map(s=>`
+      <div class="att-card" id="attcard-${s.id}">
+        <div class="att-name">${s.full_name}</div>
+        <div class="att-status">
+          <button class="att-btn att-p ${attendanceMap[s.id]==='present'?'active':''}" onclick="setAtt('${s.id}','present')">P</button>
+          <button class="att-btn att-a ${attendanceMap[s.id]==='absent'?'active':''}" onclick="setAtt('${s.id}','absent')">A</button>
+          <button class="att-btn att-l ${attendanceMap[s.id]==='late'?'active':''}" onclick="setAtt('${s.id}','late')">L</button>
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+  document.getElementById('attSave').classList.remove('hidden');
+}
+
+function setAtt(studentId, status) {
+  attendanceMap[studentId] = status;
+  const card = document.getElementById(`attcard-${studentId}`);
+  card.className = `att-card ${status}`;
+  card.querySelectorAll('.att-btn').forEach(b => b.classList.remove('active'));
+  const map = {present:'att-p',absent:'att-a',late:'att-l'};
+  const btn = card.querySelector(`.${map[status]}`);
+  if (btn) btn.classList.add('active');
+}
+
+async function saveAttendance() {
+  const courseId = document.getElementById('att_course').value;
+  const date = document.getElementById('att_date').value;
+  const rows = Object.entries(attendanceMap).map(([student_id,status])=>({student_id,course_id:courseId,date,status,teacher_id:currentUser.id}));
+  loader(true);
+  await db.from('devo_attendance').delete().eq('course_id',courseId).eq('date',date);
+  const { error } = await db.from('devo_attendance').insert(rows);
+  loader(false);
+  if (error) return toast(error.message,'error');
+  toast(`Attendance saved for ${rows.length} students!`,'success');
+}
+
+// ═══════════════════════════════════════
+// TEACHER: EXAMS
+// ═══════════════════════════════════════
+async function renderCreateExam() {
+  loader(true);
+  const { data: courses } = await db.from('devo_courses').select('id,title').eq('teacher_id',currentUser.id);
+  loader(false);
+  if (!(courses||[]).length) {
+    setMain(`<div class="topbar"><h2>✏️ Create Exam</h2></div><div class="empty"><div class="ei">📚</div><p>Create a course first</p><button class="btn btn-primary" style="margin-top:16px" onclick="navigateTo('addCourse')">+ New Course</button></div>`);
+    return;
+  }
+  setMain(`
+    <div class="topbar"><h2>✏️ Create Exam</h2></div>
+    <div class="card" style="max-width:620px">
+      <div class="fg"><label>Exam Title *</label><input id="ex_title" placeholder="e.g. HTML & CSS Quiz"></div>
+      <div class="fg"><label>Course *</label><select id="ex_course">${courses.map(c=>`<option value="${c.id}">${c.title}</option>`).join('')}</select></div>
+      <div class="fg-row3">
+        <div class="fg"><label>Type</label><select id="ex_type" onchange="resetQBuilder()"><option value="mcq">📋 MCQ</option><option value="coding">💻 Coding</option></select></div>
+        <div class="fg"><label>Time (min)</label><input id="ex_time" type="number" value="30" min="5"></div>
+        <div class="fg"><label>Pass % </label><input id="ex_pass" type="number" value="60" min="0" max="100"></div>
+      </div>
+      <div class="fg"><label>Instructions</label><textarea id="ex_inst" placeholder="Any special instructions for students..."></textarea></div>
+      <button class="btn btn-primary btn-sm" onclick="proceedToAddQuestions()">Next: Add Questions →</button>
+    </div>
+    <div id="questionsSection" class="hidden" style="margin-top:20px"></div>`);
+}
+
+let pendingQuestions = [];
+function resetQBuilder() { pendingQuestions = []; const s = document.getElementById('questionsSection'); if(s){s.innerHTML='';s.classList.add('hidden');} }
+
+function proceedToAddQuestions() {
+  const title = document.getElementById('ex_title').value.trim();
+  if (!title) return toast('Enter exam title','error');
+  pendingQuestions = [];
+  document.getElementById('questionsSection').classList.remove('hidden');
+  renderQBuilder(document.getElementById('ex_type').value);
+}
+
+function renderQBuilder(type) {
+  document.getElementById('questionsSection').innerHTML = `<div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700">Questions (${type.toUpperCase()})</div>
+      <button class="btn btn-ghost btn-sm" onclick="addQ('${type}')">+ Add Question</button>
+    </div>
+    <div id="qList"></div>
+    <div id="qActions" style="display:none;margin-top:12px">
+      <button class="btn btn-primary" onclick="saveExam()">💾 Save Exam</button>
+    </div>
+  </div>`;
+}
+
+function addQ(type) { pendingQuestions.push({type,id:rid()}); renderQForms(type); }
+function removeQ(id) { const t=pendingQuestions[0]?.type; pendingQuestions=pendingQuestions.filter(q=>q.id!==id); if(t)renderQForms(t); document.getElementById('qActions').style.display=pendingQuestions.length?'block':'none'; }
+
+function renderQForms(type) {
+  document.getElementById('qList').innerHTML = pendingQuestions.map((q,i) => type==='mcq' ? `
+    <div class="q-block">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <strong>Q${i+1}</strong>
+        <button class="btn btn-danger btn-xs" onclick="removeQ('${q.id}')">Remove</button>
+      </div>
+      <div class="fg"><label>Question *</label><input id="qq-${q.id}" placeholder="Enter question..."></div>
+      <div class="fg-row">
+        <div class="fg"><label>Option A *</label><input id="qa-${q.id}" placeholder="Option A"></div>
+        <div class="fg"><label>Option B *</label><input id="qb2-${q.id}" placeholder="Option B"></div>
+        <div class="fg"><label>Option C *</label><input id="qc-${q.id}" placeholder="Option C"></div>
+        <div class="fg"><label>Option D *</label><input id="qd-${q.id}" placeholder="Option D"></div>
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>Correct Answer</label><select id="qans-${q.id}"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div>
+        <div class="fg"><label>Marks</label><input type="number" id="qmarks-${q.id}" value="2" min="1"></div>
+      </div>
+    </div>` : `
+    <div class="q-block">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <strong>Coding Q${i+1}</strong>
+        <button class="btn btn-danger btn-xs" onclick="removeQ('${q.id}')">Remove</button>
+      </div>
+      <div class="fg"><label>Question *</label><textarea id="qq-${q.id}" placeholder="Describe the coding problem..."></textarea></div>
+      <div class="fg"><label>Starter Code</label>
+        <div class="code-editor"><div class="code-head"><span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text2)">Starter Code</span></div>
+        <textarea class="font-mono" id="qstart-${q.id}" placeholder="// starter code..."></textarea></div>
+      </div>
+      <div class="fg"><label>Expected Output / Notes</label><textarea id="qexp-${q.id}" placeholder="Expected output..."></textarea></div>
+      <div class="fg-row">
+        <div class="fg"><label>Language</label><select id="qlang-${q.id}"><option>javascript</option><option>python</option><option>java</option><option>c++</option><option>html</option><option>sql</option></select></div>
+        <div class="fg"><label>Marks</label><input type="number" id="qmarks-${q.id}" value="10" min="1"></div>
+      </div>
+    </div>`).join('');
+  document.getElementById('qActions').style.display = pendingQuestions.length?'block':'none';
+}
+
+async function saveExam() {
+  if (!pendingQuestions.length) return toast('Add at least one question','error');
+  const title = document.getElementById('ex_title').value.trim();
+  const course_id = document.getElementById('ex_course').value;
+  const exam_type = document.getElementById('ex_type').value;
+  const time_limit = parseInt(document.getElementById('ex_time').value);
+  const pass_percentage = parseInt(document.getElementById('ex_pass').value)||60;
+  const instructions = document.getElementById('ex_inst').value.trim();
+  loader(true);
+  const { data: exam, error: ee } = await db.from('devo_exams').insert({title,course_id,exam_type,time_limit,pass_percentage,instructions}).select().single();
+  if (ee) { loader(false); return toast(ee.message,'error'); }
+  if (exam_type==='mcq') {
+    await db.from('devo_mcq_questions').insert(pendingQuestions.map(q=>({exam_id:exam.id,question:document.getElementById(`qq-${q.id}`)?.value,option_a:document.getElementById(`qa-${q.id}`)?.value,option_b:document.getElementById(`qb2-${q.id}`)?.value,option_c:document.getElementById(`qc-${q.id}`)?.value,option_d:document.getElementById(`qd-${q.id}`)?.value,correct_answer:document.getElementById(`qans-${q.id}`)?.value,marks:parseInt(document.getElementById(`qmarks-${q.id}`)?.value)||1})));
+  } else {
+    await db.from('devo_coding_questions').insert(pendingQuestions.map(q=>({exam_id:exam.id,question:document.getElementById(`qq-${q.id}`)?.value,starter_code:document.getElementById(`qstart-${q.id}`)?.value||'',expected_output:document.getElementById(`qexp-${q.id}`)?.value||'',language:document.getElementById(`qlang-${q.id}`)?.value||'javascript',marks:parseInt(document.getElementById(`qmarks-${q.id}`)?.value)||10})));
+  }
+  loader(false); pendingQuestions=[]; toast('Exam created!','success'); navigateTo('myExams');
+}
+
+async function renderTeacherExams() {
+  loader(true);
+  const { data: courses } = await db.from('devo_courses').select('id').eq('teacher_id',currentUser.id);
+  const ids = (courses||[]).map(c=>c.id);
+  const { data: exams } = ids.length ? await db.from('devo_exams').select('*, devo_courses(title)').in('course_id',ids).order('created_at',{ascending:false}) : {data:[]};
+  loader(false);
+  setMain(`
+    <div class="topbar"><h2>📝 My Exams</h2><div class="topbar-actions"><button class="btn btn-primary btn-sm" onclick="navigateTo('createExam')">+ Create Exam</button></div></div>
+    ${!(exams||[]).length ? `<div class="empty"><div class="ei">📝</div><p>No exams yet</p></div>` :
+    `<div class="card"><div class="tbl-wrap"><table>
+      <thead><tr><th>Title</th><th>Course</th><th>Type</th><th>Time</th><th>Pass%</th><th>Created</th><th>Actions</th></tr></thead>
+      <tbody>${exams.map(e=>`<tr>
+        <td><strong>${e.title}</strong></td>
+        <td style="font-size:12px;color:var(--text2)">${e.devo_courses?.title||'—'}</td>
+        <td><span class="badge ${e.exam_type==='mcq'?'b-cyan':'b-violet'}">${e.exam_type}</span></td>
+        <td style="font-family:'DM Mono',monospace;font-size:12px">${e.time_limit}m</td>
+        <td style="font-family:'DM Mono',monospace;font-size:12px">${e.pass_percentage||60}%</td>
+        <td style="color:var(--text3);font-size:12px">${fmtDate(e.created_at)}</td>
+        <td><button class="btn btn-danger btn-xs" onclick="deleteExam('${e.id}','${e.title.replace(/'/g,"\\'")}')">Delete</button></td>
+      </tr>`).join('')}</tbody>
+    </table></div></div>`}`);
+}
+
+async function deleteExam(id, title) {
+  if (!confirm(`Delete "${title}"?`)) return;
+  loader(true); await db.from('devo_exams').delete().eq('id',id); loader(false);
+  toast('Deleted','success'); renderTeacherExams();
+}
+
+async function renderTeacherResults() {
+  loader(true);
+  const { data: courses } = await db.from('devo_courses').select('id').eq('teacher_id',currentUser.id);
+  const ids = (courses||[]).map(c=>c.id);
+  const { data: exams } = ids.length ? await db.from('devo_exams').select('id').in('course_id',ids) : {data:[]};
+  const eIds = (exams||[]).map(e=>e.id);
+  const { data: subs } = eIds.length ? await db.from('devo_submissions').select('*, devo_users(full_name), devo_exams(title)').in('exam_id',eIds).order('submitted_at',{ascending:false}) : {data:[]};
+  loader(false);
+  setMain(`
+    <div class="topbar"><h2>📈 Student Results</h2></div>
+    ${!(subs||[]).length ? `<div class="empty"><div class="ei">📈</div><p>No submissions yet</p></div>` :
+    `<div class="card"><div class="tbl-wrap"><table>
+      <thead><tr><th>Student</th><th>Exam</th><th>Score</th><th>%</th><th>Result</th><th>Date</th></tr></thead>
+      <tbody>${subs.map(s=>{const p=pct(s.score,s.total_marks);return `<tr>
+        <td><strong>${s.devo_users?.full_name||'—'}</strong></td>
+        <td style="font-size:12px">${s.devo_exams?.title||'—'}</td>
+        <td style="font-family:'DM Mono',monospace">${s.score}/${s.total_marks}</td>
+        <td style="color:${p>=60?'var(--green)':'var(--red2)'}">${p}%</td>
+        <td><span class="badge ${p>=60?'b-green':'b-red'}">${p>=60?'PASS':'FAIL'}</span></td>
+        <td style="color:var(--text3);font-size:12px">${fmtDate(s.submitted_at)}</td>
+      </tr>`;}).join('')}</tbody>
+    </table></div></div>`}`);
+}
+
+// ═══════════════════════════════════════
+// STUDENT: BROWSE & ENROLL
+// ═══════════════════════════════════════
+async function renderBrowseCourses() {
+  loader(true);
+  const { data: courses } = await db.from('devo_courses').select('*, devo_users(full_name)');
+  const { data: enrolled } = await db.from('devo_enrollments').select('course_id').eq('student_id',currentUser.id);
+  const enrolledIds = new Set((enrolled||[]).map(e=>e.course_id));
+  loader(false);
+
+  const catColors = {'Computer Basics':'b-cyan','Typing':'b-gray','MS Office':'b-violet','Python':'b-green','Web Development':'b-cyan','Design':'b-pink','Digital Marketing':'b-amber'};
+
+  setMain(`
+    <div class="topbar"><h2>📚 Browse Courses</h2></div>
+    ${!(courses||[]).length ? `<div class="empty"><div class="ei">📚</div><p>No courses available yet</p></div>` :
+    `<div class="g3">${courses.map(c=>`
+      <div class="course-card">
+        <span class="badge ${catColors[c.category]||'b-gray'}" style="margin-bottom:10px">${c.category||'General'}</span>
+        <h3>${c.title}</h3>
+        <p>${c.description||'No description'}</p>
+        <div class="course-meta">
+          <span>👨‍🏫 ${c.devo_users?.full_name||'Expert Trainer'}</span>
+          ${c.duration_weeks?`<span>⏱ ${c.duration_weeks}w</span>`:''}
+        </div>
+        ${c.fee?`<div class="course-fee">${fmtMoney(c.fee)}</div>`:''}
+        <div style="margin-top:12px">
+          ${enrolledIds.has(c.id)
+            ? `<button class="btn btn-success btn-sm" onclick="viewCourse('${c.id}','${c.title.replace(/'/g,"\\'")}')">📖 View</button>`
+            : `<button class="btn btn-primary btn-sm" onclick="enrollCourse('${c.id}','${c.title.replace(/'/g,"\\'")}')">Enroll →</button>`}
+        </div>
+      </div>`).join('')}</div>`}`);
+}
+
+async function enrollCourse(courseId, title) {
+  loader(true);
+  const { error } = await db.from('devo_enrollments').insert({student_id:currentUser.id,course_id:courseId});
+  loader(false);
+  if (error) return toast('Already enrolled or error','error');
+  toast(`Enrolled in "${title}"!`,'success'); renderBrowseCourses();
+}
+
+async function renderStudentEnrollments() {
+  loader(true);
+  const { data: enr } = await db.from('devo_enrollments').select('*, devo_courses(*, devo_users(full_name))').eq('student_id',currentUser.id);
+  loader(false);
+  setMain(`
+    <div class="topbar"><h2>🎯 My Enrollments</h2></div>
+    ${!(enr||[]).length ? `<div class="empty"><div class="ei">🎯</div><p>Not enrolled in any course</p><button class="btn btn-primary" style="margin-top:16px" onclick="navigateTo('browseCourses')">Browse Courses</button></div>` :
+    `<div class="g3">${enr.map(e=>{const c=e.devo_courses;return `
+      <div class="course-card">
+        <span class="badge b-green" style="margin-bottom:10px">${c?.category||'General'}</span>
+        <h3>${c?.title||'—'}</h3>
+        <p>${c?.description||'No description'}</p>
+        <div class="course-meta"><span>👨‍🏫 ${c?.devo_users?.full_name||'Unknown'}</span></div>
+        ${c?.fee?`<div class="course-fee" style="font-size:14px">${fmtMoney(c.fee)}</div>`:''}
+        <div style="margin-top:12px">
+          <button class="btn btn-primary btn-sm" onclick="viewCourse('${c?.id}','${(c?.title||'').replace(/'/g,"\\'")}')">📖 View Lessons</button>
+        </div>
+      </div>`}).join('')}</div>`}`);
+}
+
+async function viewCourse(courseId, courseTitle) {
+  loader(true);
+  const { data: lessons } = await db.from('devo_lessons').select('*').eq('course_id',courseId).order('lesson_order');
+  loader(false);
+  if (!(lessons||[]).length) return toast('No lessons yet','info');
+  let idx = 0;
+  window._gotoLesson = function(i) { idx=i; renderViewer(); };
+  function renderViewer() {
+    const l = lessons[idx];
+    setMain(`
+      <div class="topbar">
+        <h2>📖 ${courseTitle}</h2>
+        <div class="topbar-actions"><button class="btn btn-ghost btn-sm" onclick="navigateTo('myCourses')">← Back</button></div>
+      </div>
+      <div class="card" style="display:flex;gap:0;padding:0;min-height:500px;overflow:hidden">
+        <div class="lesson-sb">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text3);margin-bottom:10px">LESSONS</div>
+          ${lessons.map((les,i)=>`
+            <div class="lesson-item ${i===idx?'active':''}" onclick="window._gotoLesson(${i})">
+              <div class="lesson-num">${i+1}</div>
+              <span style="font-size:13px">${les.title}</span>
+            </div>`).join('')}
+        </div>
+        <div class="lesson-content">${l.content||'(No content yet)'}</div>
+      </div>`);
+  }
+  renderViewer();
+}
+
+// ═══════════════════════════════════════
+// STUDENT: EXAMS
+// ═══════════════════════════════════════
+async function renderAvailableExams() {
+  loader(true);
+  const { data: enr } = await db.from('devo_enrollments').select('course_id').eq('student_id',currentUser.id);
+  const courseIds = (enr||[]).map(e=>e.course_id);
+  const { data: exams } = courseIds.length ? await db.from('devo_exams').select('*, devo_courses(title)').in('course_id',courseIds) : {data:[]};
+  const { data: taken } = await db.from('devo_submissions').select('exam_id').eq('student_id',currentUser.id);
+  const takenIds = new Set((taken||[]).map(s=>s.exam_id));
+  loader(false);
+  setMain(`
+    <div class="topbar"><h2>📝 Available Exams</h2></div>
+    ${!(exams||[]).length ? `<div class="empty"><div class="ei">📝</div><p>No exams available</p><span>Enroll in courses to see exams</span></div>` :
+    `<div class="g3">${exams.map(e=>`
+      <div class="course-card">
+        <span class="badge ${e.exam_type==='mcq'?'b-cyan':'b-violet'}" style="margin-bottom:10px">${e.exam_type.toUpperCase()}</span>
+        <h3>${e.title}</h3>
+        <p style="font-size:12px;color:var(--text2)">Course: ${e.devo_courses?.title||'—'}</p>
+        <div class="course-meta"><span>⏱ ${e.time_limit} min</span><span>Pass: ${e.pass_percentage||60}%</span></div>
+        ${e.instructions?`<p style="font-size:11px;color:var(--text3);margin-top:8px;border-top:1px solid var(--border);padding-top:8px">${e.instructions}</p>`:''}
+        <div style="margin-top:12px">
+          ${takenIds.has(e.id)
+            ? `<span class="badge b-green">✓ Submitted</span>`
+            : `<button class="btn btn-primary btn-sm" onclick="startExam('${e.id}')">Start →</button>`}
+        </div>
+      </div>`).join('')}</div>`}`);
+}
+
+async function startExam(examId) {
+  loader(true);
+  const { data: exam } = await db.from('devo_exams').select('*').eq('id',examId).single();
+  const { data: questions } = exam.exam_type==='mcq'
+    ? await db.from('devo_mcq_questions').select('*').eq('exam_id',examId)
+    : await db.from('devo_coding_questions').select('*').eq('exam_id',examId);
+  loader(false);
+  if (!(questions||[]).length) return toast('No questions in this exam','error');
+  currentExamData = {exam,questions:questions||[]};
+  currentExamAnswers = {};
+  setMain(`
+    <div class="topbar">
+      <h2>📝 ${exam.title}</h2>
+      <div class="topbar-actions">
+        <span class="badge ${exam.exam_type==='mcq'?'b-cyan':'b-violet'}">${exam.exam_type.toUpperCase()}</span>
+        <button class="btn btn-danger btn-sm" onclick="submitExam()">Submit</button>
+      </div>
+    </div>
+    ${exam.instructions?`<div class="card" style="margin-bottom:16px;border-color:var(--border2)"><div style="font-size:12px;color:var(--text2)">📌 ${exam.instructions}</div></div>`:''}
+    <div id="examQs">${(questions||[]).map((q,i)=>exam.exam_type==='mcq'?renderMCQ(q,i):renderCoding(q,i)).join('')}</div>
+    <div class="card" style="margin-top:16px;text-align:center">
+      <button class="btn btn-primary" onclick="submitExam()">🚀 Submit Exam</button>
+    </div>`);
+  startExamTimer(exam.time_limit);
+}
+
+function renderMCQ(q,i) {
+  return `<div class="card" style="margin-bottom:14px">
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px">
+      <div style="background:var(--cyan);color:#000;width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">${i+1}</div>
+      <strong style="font-size:14px;flex:1">${q.question}</strong>
+      <span style="font-size:11px;color:var(--text3);flex-shrink:0">${q.marks}m</span>
+    </div>
+    <div class="opts-grid">${['A','B','C','D'].map(opt=>`
+      <button class="opt-btn" id="opt-${q.id}-${opt}" onclick="selectMCQ('${q.id}','${opt}')">
+        <div class="opt-lbl">${opt}</div>${q[`option_${opt.toLowerCase()}`]}
+      </button>`).join('')}
+    </div>
+  </div>`;
+}
+
+function selectMCQ(qId,opt) {
+  currentExamAnswers[qId]=opt;
+  ['A','B','C','D'].forEach(o=>{ const el=document.getElementById(`opt-${qId}-${o}`); if(el)el.classList.toggle('selected',o===opt); });
+}
+
+function renderCoding(q,i) {
+  return `<div class="card" style="margin-bottom:14px">
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px">
+      <div style="background:var(--violet);color:#fff;width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">${i+1}</div>
+      <strong style="font-size:14px;flex:1">${q.question}</strong>
+      <span style="font-size:11px;color:var(--text3);flex-shrink:0">${q.marks}m</span>
+    </div>
+    ${q.expected_output?`<div class="q-block" style="margin-bottom:12px"><strong style="font-size:11px">Expected Output:</strong><p style="font-size:12px;color:var(--text2);margin-top:4px">${q.expected_output}</p></div>`:''}
+    <div class="code-editor">
+      <div class="code-head"><span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text2)">💻 ${q.language||'code'}</span></div>
+      <textarea style="font-family:'DM Mono',monospace;width:100%;min-height:180px;background:transparent;border:none;color:#a8d0f8;font-size:13px;padding:14px;resize:vertical;outline:none;line-height:1.7" id="code-${q.id}" oninput="currentExamAnswers['${q.id}']=this.value">${q.starter_code||''}</textarea>
+    </div>
+  </div>`;
+}
+
+async function submitExam() {
+  if (!currentExamData) return;
+  if (!confirm('Submit exam? This cannot be undone.')) return;
+  const {exam,questions} = currentExamData;
+  let score=0,total=0;
+  if (exam.exam_type==='mcq') {
+    questions.forEach(q=>{ total+=q.marks; if(currentExamAnswers[q.id]===q.correct_answer)score+=q.marks; });
+  } else { questions.forEach(q=>{ total+=q.marks; }); score=0; }
+  stopExamTimer(); loader(true);
+  const { error } = await db.from('devo_submissions').insert({student_id:currentUser.id,exam_id:exam.id,answers:currentExamAnswers,score,total_marks:total,status:'submitted'});
+  loader(false);
+  if (error) return toast(error.message,'error');
+  const p = pct(score,total), pass = p>=(exam.pass_percentage||60);
+  const savedQ=[...questions], savedA={...currentExamAnswers};
+  currentExamData=null; currentExamAnswers={};
+  if (exam.exam_type==='mcq') showResult(score,total,p,pass,savedQ,savedA,exam.pass_percentage||60);
+  else setMain(`<div class="card" style="max-width:480px;margin:0 auto"><div style="text-align:center;padding:32px"><div style="font-size:56px;margin-bottom:16px">✅</div><h2 style="font-family:'Syne',sans-serif;font-size:22px;margin-bottom:8px">Submitted!</h2><p style="color:var(--text2);font-size:14px">Your coding answers have been submitted. The teacher will review and grade your solution.</p><button class="btn btn-primary" style="margin-top:20px" onclick="navigateTo('myResults')">View Results →</button></div></div>`);
+}
+
+function showResult(score,total,p,pass,questions,answers,passP) {
+  setMain(`
+    <div class="topbar"><h2>📊 Result</h2></div>
+    <div class="card" style="max-width:460px;margin:0 auto 20px;text-align:center">
+      <div style="padding:28px">
+        <div class="result-ring ${pass?'pass':'fail'}">
+          <div class="rn" style="color:${pass?'var(--green)':'var(--red2)'}">${score}</div>
+          <div style="font-size:11px;color:var(--text3)">/ ${total}</div>
+        </div>
+        <h2 style="font-family:'Syne',sans-serif;font-size:26px;font-weight:700;color:${pass?'var(--green)':'var(--red2)'}">${p}%</h2>
+        <span class="badge ${pass?'b-green':'b-red'}" style="font-size:13px;padding:5px 14px;margin-top:8px">${pass?'🎉 PASSED':'❌ FAILED'}</span>
+        <div style="font-size:12px;color:var(--text3);margin-top:8px">Pass mark: ${passP}%</div>
+        <div class="prog-bar" style="margin-top:14px"><div class="prog-fill" style="width:${p}%"></div></div>
+        <button class="btn btn-primary" style="margin-top:20px" onclick="navigateTo('myResults')">View All Results →</button>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:14px">Review</div>
+      ${questions.map((q,i)=>`
+        <div class="q-block">
+          <strong style="font-size:13px">${i+1}. ${q.question}</strong>
+          <div class="opts-grid" style="margin-top:10px">${['A','B','C','D'].map(opt=>`
+            <div class="opt-btn ${answers[q.id]===opt?(opt===q.correct_answer?'correct':'wrong'):(opt===q.correct_answer?'correct':'')}">
+              <div class="opt-lbl">${opt}</div>${q[`option_${opt.toLowerCase()}`]}
+            </div>`).join('')}
+          </div>
+        </div>`).join('')}
+    </div>`);
+}
+
+async function renderMyResults() {
+  loader(true);
+  const { data: subs } = await db.from('devo_submissions').select('*, devo_exams(title,exam_type,pass_percentage)').eq('student_id',currentUser.id).order('submitted_at',{ascending:false});
+  loader(false);
+  setMain(`
+    <div class="topbar"><h2>📈 My Results</h2></div>
+    ${!(subs||[]).length ? `<div class="empty"><div class="ei">📈</div><p>No results yet</p><span>Take an exam to see your results</span></div>` :
+    `<div class="card"><div class="tbl-wrap"><table>
+      <thead><tr><th>Exam</th><th>Type</th><th>Score</th><th>%</th><th>Result</th><th>Date</th></tr></thead>
+      <tbody>${subs.map(s=>{const p=pct(s.score,s.total_marks),pp=s.devo_exams?.pass_percentage||60;return `<tr>
+        <td><strong>${s.devo_exams?.title||'—'}</strong></td>
+        <td><span class="badge ${s.devo_exams?.exam_type==='mcq'?'b-cyan':'b-violet'}">${(s.devo_exams?.exam_type||'').toUpperCase()}</span></td>
+        <td style="font-family:'DM Mono',monospace">${s.score}/${s.total_marks}</td>
+        <td style="color:${p>=pp?'var(--green)':'var(--red2)'}">${p}%</td>
+        <td><span class="badge ${p>=pp?'b-green':'b-red'}">${p>=pp?'PASS':'FAIL'}</span></td>
+        <td style="color:var(--text3);font-size:12px">${fmtDate(s.submitted_at)}</td>
+      </tr>`;}).join('')}</tbody>
+    </table></div></div>`}`);
+}
+
+// ═══════════════════════════════════════
+// STUDENT: FEES
+// ═══════════════════════════════════════
+async function renderMyFees() {
+  loader(true);
+  const { data: fees } = await db.from('devo_fees').select('*, devo_courses(title,fee)').eq('student_id',currentUser.id).order('created_at',{ascending:false});
+  loader(false);
+  const total = (fees||[]).reduce((a,f)=>a+f.total_fee,0);
+  const paid = (fees||[]).reduce((a,f)=>a+f.amount_paid,0);
+  setMain(`
+    <div class="topbar"><h2>💰 My Fees</h2></div>
+    <div class="g3" style="margin-bottom:20px">
+      <div class="stat-card"><div class="stat-icon">💵</div><div class="stat-val" style="color:var(--amber)">${fmtMoney(total)}</div><div class="stat-label">Total Fee</div></div>
+      <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-val" style="color:var(--green)">${fmtMoney(paid)}</div><div class="stat-label">Amount Paid</div></div>
+      <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-val" style="color:var(--red2)">${fmtMoney(total-paid)}</div><div class="stat-label">Balance Due</div></div>
+    </div>
+    ${!(fees||[]).length ? `<div class="empty"><div class="ei">💰</div><p>No fee records found</p><span>Contact admin for fee details</span></div>` :
+    `<div class="card"><div class="tbl-wrap"><table>
+      <thead><tr><th>Course</th><th>Course Fee</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th><th>Due Date</th><th>Notes</th></tr></thead>
+      <tbody>${fees.map(f=>{const pen=f.total_fee-f.amount_paid;return `<tr>
+        <td style="font-size:12px">${f.devo_courses?.title||'General'}</td>
+        <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3)">${f.devo_courses?.fee?fmtMoney(f.devo_courses.fee):'—'}</td>
+        <td style="font-family:'DM Mono',monospace">${fmtMoney(f.total_fee)}</td>
+        <td style="font-family:'DM Mono',monospace;color:var(--green)">${fmtMoney(f.amount_paid)}</td>
+        <td style="font-family:'DM Mono',monospace;color:${pen>0?'var(--red2)':'var(--green)'}">${fmtMoney(pen)}</td>
+        <td><span class="fee-${f.status}">${f.status==='paid'?'✓ Paid':f.status==='partial'?'◑ Partial':'✗ Unpaid'}</span></td>
+        <td style="font-size:12px;color:${f.due_date&&new Date(f.due_date)<new Date()?'var(--red2)':'var(--text3)'}">${fmtDate(f.due_date)}</td>
+        <td style="font-size:11px;color:var(--text3)">${f.notes||'—'}</td>
+      </tr>`;}).join('')}</tbody>
+    </table></div></div>`}`);
+}
+
+// ═══════════════════════════════════════
+// STUDENT: MY ATTENDANCE
+// ═══════════════════════════════════════
+async function renderMyAttendance() {
+  loader(true);
+  const { data: atts } = await db.from('devo_attendance').select('*, devo_courses(title)').eq('student_id',currentUser.id).order('date',{ascending:false});
+  loader(false);
+  const total = (atts||[]).length;
+  const present = (atts||[]).filter(a=>a.status==='present').length;
+  const absent = (atts||[]).filter(a=>a.status==='absent').length;
+  const late = (atts||[]).filter(a=>a.status==='late').length;
+  const attPct = total ? Math.round(present/total*100) : 0;
+  setMain(`
+    <div class="topbar"><h2>📅 My Attendance</h2></div>
+    <div class="g4" style="margin-bottom:20px">
+      <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-val" style="color:var(--cyan)">${total}</div><div class="stat-label">Total Classes</div></div>
+      <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-val" style="color:var(--green)">${present}</div><div class="stat-label">Present</div></div>
+      <div class="stat-card"><div class="stat-icon">❌</div><div class="stat-val" style="color:var(--red2)">${absent}</div><div class="stat-label">Absent</div></div>
+      <div class="stat-card"><div class="stat-icon">📈</div><div class="stat-val" style="color:${attPct>=75?'var(--green)':attPct>=50?'var(--amber)':'var(--red2)'}">${attPct}%</div><div class="stat-label">Attendance %</div></div>
+    </div>
+    ${!total ? `<div class="empty"><div class="ei">📅</div><p>No attendance records yet</p></div>` :
+    `<div class="card"><div class="tbl-wrap"><table>
+      <thead><tr><th>Date</th><th>Course</th><th>Status</th></tr></thead>
+      <tbody>${atts.map(a=>`<tr>
+        <td style="font-size:13px">${fmtDate(a.date)}</td>
+        <td style="font-size:12px;color:var(--text2)">${a.devo_courses?.title||'—'}</td>
+        <td><span class="badge ${a.status==='present'?'b-green':a.status==='late'?'b-amber':'b-red'}">${a.status}</span></td>
+      </tr>`).join('')}</tbody>
+    </table></div></div>`}`);
+}
+
+// ═══════════════════════════════════════
+// EXAM TIMER
+// ═══════════════════════════════════════
+function startExamTimer(minutes) {
+  examTimeLeft = minutes*60;
+  const el = document.getElementById('examTimer');
+  const val = document.getElementById('timerVal');
+  el.style.display='flex';
+  function tick() {
+    const m=Math.floor(examTimeLeft/60), s=examTimeLeft%60;
+    val.textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    el.className = examTimeLeft<=60?'danger':examTimeLeft<=300?'warning':'';
+    if (examTimeLeft<=0){toast('⏱️ Time up! Auto-submitting...','error');submitExam();return;}
+    examTimeLeft--; examTimer=setTimeout(tick,1000);
+  }
+  tick();
+}
+
+function stopExamTimer() {
+  if (examTimer){clearTimeout(examTimer);examTimer=null;}
+  document.getElementById('examTimer').style.display='none';
+}
+
+// ═══════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════
+window.addEventListener('DOMContentLoaded',()=>{
+  setTimeout(()=>loader(false),1200);
+  const saved=sessionStorage.getItem('devoUser');
+  if(saved){try{currentUser=JSON.parse(saved);setTimeout(()=>initApp(),300);}catch(e){sessionStorage.removeItem('devoUser');}}
+  document.getElementById('loginPassword').addEventListener('keypress',e=>{if(e.key==='Enter')handleLogin();});
+});
+</script>
+</body>
+</html>
