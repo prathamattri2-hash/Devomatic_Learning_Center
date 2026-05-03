@@ -32,6 +32,7 @@
   --rs: 6px;
   --shadow: 0 8px 32px rgba(0,0,0,0.5);
   --sb-width: 220px;
+  --bottom-nav-h: 64px;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;}
@@ -136,6 +137,130 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);colo
 .topbar-actions{display:flex;gap:8px;flex-wrap:wrap;}
 .ham-btn{display:none;align-items:center;justify-content:center;width:36px;height:36px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);cursor:pointer;flex-shrink:0;font-size:16px;transition:all .2s;}
 .ham-btn:hover{background:var(--s3);}
+
+/* ═══════════════════════════════════════
+   MOBILE BOTTOM NAV
+═══════════════════════════════════════ */
+#bottomNav{
+  display:none;
+  position:fixed;
+  bottom:0;left:0;right:0;
+  height:var(--bottom-nav-h);
+  background:var(--s1);
+  border-top:1px solid var(--border);
+  z-index:400;
+  padding:0 4px;
+  box-shadow:0 -8px 32px rgba(0,0,0,.4);
+}
+#bottomNav .bn-inner{
+  display:flex;
+  align-items:center;
+  justify-content:space-around;
+  height:100%;
+  max-width:480px;
+  margin:0 auto;
+}
+.bn-item{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  padding:6px 10px;
+  border-radius:10px;
+  cursor:pointer;
+  transition:all .18s;
+  flex:1;
+  min-width:0;
+  position:relative;
+}
+.bn-item:active{transform:scale(.92);}
+.bn-item .bn-icon{font-size:20px;line-height:1;transition:transform .18s;}
+.bn-item .bn-label{font-size:9px;font-weight:700;letter-spacing:.3px;color:var(--text3);transition:color .18s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:52px;text-align:center;}
+.bn-item.active .bn-icon{transform:translateY(-2px);}
+.bn-item.active .bn-label{color:var(--cyan);}
+.bn-item.active::after{
+  content:'';
+  position:absolute;
+  bottom:-1px;left:50%;transform:translateX(-50%);
+  width:24px;height:2px;
+  background:var(--cyan);
+  border-radius:2px 2px 0 0;
+  box-shadow:0 0 8px var(--cyan);
+}
+
+/* THREE-DOT MORE BUTTON */
+.bn-more{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;padding:6px 10px;border-radius:10px;cursor:pointer;
+  transition:all .18s;flex:1;min-width:0;position:relative;
+}
+.bn-more:active{transform:scale(.92);}
+.bn-more .bn-icon{font-size:20px;line-height:1;}
+.bn-more .bn-label{font-size:9px;font-weight:700;letter-spacing:.3px;color:var(--text3);}
+.bn-more.open .bn-label{color:var(--violet2);}
+
+/* THREE-DOT POPUP MENU */
+#moreMenu{
+  position:fixed;
+  bottom:calc(var(--bottom-nav-h) + 8px);
+  right:8px;
+  width:230px;
+  background:var(--s1);
+  border:1px solid var(--border2);
+  border-radius:14px;
+  box-shadow:0 -8px 40px rgba(0,0,0,.6),0 0 0 1px rgba(0,229,255,.06);
+  z-index:500;
+  overflow:hidden;
+  transform:scale(.92) translateY(8px);
+  transform-origin:bottom right;
+  opacity:0;
+  pointer-events:none;
+  transition:transform .22s cubic-bezier(.34,1.56,.64,1),opacity .18s ease;
+}
+#moreMenu.open{
+  transform:scale(1) translateY(0);
+  opacity:1;
+  pointer-events:all;
+}
+.mm-header{
+  padding:12px 14px 8px;
+  font-size:9px;font-weight:700;letter-spacing:1.2px;
+  color:var(--text3);text-transform:uppercase;
+  border-bottom:1px solid var(--border);
+}
+.mm-item{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 14px;cursor:pointer;
+  font-size:13px;font-weight:500;color:var(--text2);
+  transition:all .15s;position:relative;
+}
+.mm-item:hover{background:var(--s2);color:var(--text);}
+.mm-item.active{color:var(--cyan);background:rgba(0,229,255,.07);}
+.mm-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:20px;background:var(--cyan);border-radius:0 3px 3px 0;}
+.mm-item .mm-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0;}
+.mm-divider{height:1px;background:var(--border);margin:4px 0;}
+.mm-logout{color:var(--red2)!important;}
+.mm-logout:hover{background:rgba(255,23,68,.08)!important;}
+
+/* QUICK SWITCH BADGE on ⋮ button when items active */
+.bn-more .dot-badge{
+  position:absolute;top:8px;right:calc(50% - 14px);
+  width:7px;height:7px;border-radius:50%;
+  background:var(--violet2);
+  border:2px solid var(--s1);
+  display:none;
+}
+.bn-more.has-active .dot-badge{display:block;}
+
+/* MORE MENU OVERLAY */
+#moreOverlay{
+  display:none;position:fixed;inset:0;
+  z-index:499;
+  background:rgba(0,0,0,.3);
+  backdrop-filter:blur(2px);
+}
+#moreOverlay.open{display:block;}
 
 /* CARDS */
 .card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:18px;}
@@ -243,7 +368,7 @@ tbody tr:last-child td{border-bottom:none;}
 .att-card.late{border-color:var(--amber);background:rgba(255,171,0,.07);}
 .att-name{font-size:12px;font-weight:600;margin-bottom:4px;}
 .att-status{font-size:11px;margin-top:7px;display:flex;gap:4px;justify-content:center;}
-.att-btn{padding:3px 7px;border-radius:4px;border:none;cursor:pointer;font-size:10px;font-weight:700;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.att-btn{padding:3px 7px;border-radius:4px;border:none;cursor:pointer;font-size:10px;font-weight:700;font-family:'DM Sans',sans-serif;transition:all .15px;}
 .att-p{background:rgba(0,230,118,.15);color:var(--green);}
 .att-p:hover,.att-p.active{background:var(--green);color:#000;}
 .att-a{background:rgba(255,23,68,.15);color:var(--red2);}
@@ -277,6 +402,7 @@ tbody tr:last-child td{border-bottom:none;}
   .sidebar.open{transform:translateX(0);}
   .main{margin-left:0;padding:14px 14px 80px;}
   .ham-btn{display:flex;}
+  #bottomNav{display:block;}
   .g2,.g3,.g4,.g5{grid-template-columns:1fr;}
   .fg-row,.fg-row3{grid-template-columns:1fr;}
   .login-wrap{grid-template-columns:1fr;max-height:none;}
@@ -295,10 +421,10 @@ tbody tr:last-child td{border-bottom:none;}
   .lesson-sb{width:100%;border-right:none;border-bottom:1px solid var(--border);max-height:160px;}
   .stat-val{font-size:22px;}
   .stat-icon{font-size:20px;}
-  #examTimer{top:auto;bottom:16px;right:50%;transform:translateX(50%);}
+  #examTimer{top:auto;bottom:calc(var(--bottom-nav-h) + 10px);right:50%;transform:translateX(50%);}
 }
 @media(max-width:420px){
-  .main{padding:12px 10px 72px;}
+  .main{padding:12px 10px 80px;}
   .card{padding:14px;}
   .topbar{margin-bottom:16px;}
   .topbar h2{font-size:15px;}
@@ -376,6 +502,9 @@ tbody tr:last-child td{border-bottom:none;}
 <!-- SIDEBAR OVERLAY -->
 <div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
 
+<!-- MORE MENU OVERLAY -->
+<div id="moreOverlay" onclick="closeMoreMenu()"></div>
+
 <!-- APP -->
 <div id="app" class="hidden">
   <aside class="sidebar" id="sidebar">
@@ -401,6 +530,23 @@ tbody tr:last-child td{border-bottom:none;}
     </div>
   </aside>
   <main class="main" id="mainContent"></main>
+
+  <!-- BOTTOM NAV (mobile) -->
+  <nav id="bottomNav">
+    <div class="bn-inner" id="bnInner">
+      <!-- Built dynamically by buildBottomNav() -->
+    </div>
+  </nav>
+
+  <!-- THREE-DOT MORE MENU -->
+  <div id="moreMenu">
+    <div class="mm-header" id="mmHeader">More Options</div>
+    <div id="mmItems"></div>
+    <div class="mm-divider"></div>
+    <div class="mm-item mm-logout" onclick="logout()">
+      <span class="mm-icon">🚪</span>Sign Out
+    </div>
+  </div>
 </div>
 
 <script>
@@ -503,17 +649,68 @@ function initApp(){
   document.getElementById('sbRole').textContent=currentUser.role;
   document.getElementById('sbRoleLabel').textContent=currentUser.role.toUpperCase()+' PANEL';
   buildNav();
+  buildBottomNav();
   loaderHide();
   navigateTo('home');
 }
 
 // ═══════════════════════════════════════
-// NAV
+// NAV CONFIG
 // ═══════════════════════════════════════
 const navCfg={
-  admin:[{section:'Overview'},{id:'home',label:'Dashboard',icon:'📊'},{section:'Academics'},{id:'adminCourses',label:'Courses & Catalog',icon:'📚'},{id:'allExams',label:'All Exams',icon:'📝'},{section:'People'},{id:'manageUsers',label:'Users',icon:'👥'},{id:'feeManager',label:'Fee Manager',icon:'💰'},{section:'Reports'},{id:'submissions',label:'Submissions',icon:'📋'},{id:'attendanceReport',label:'Attendance',icon:'📅'}],
-  teacher:[{section:'Overview'},{id:'home',label:'Dashboard',icon:'📊'},{section:'Courses'},{id:'myCourses',label:'My Courses',icon:'📚'},{id:'addCourse',label:'New Course',icon:'➕'},{section:'Exams'},{id:'myExams',label:'My Exams',icon:'📝'},{id:'createExam',label:'Create Exam',icon:'✏️'},{section:'Students'},{id:'takeAttendance',label:'Attendance',icon:'📅'},{id:'results',label:'Results',icon:'📈'}],
-  student:[{section:'Overview'},{id:'home',label:'Dashboard',icon:'📊'},{section:'Learning'},{id:'browseCourses',label:'Browse Courses',icon:'📚'},{id:'myCourses',label:'My Enrollments',icon:'🎯'},{section:'Exams'},{id:'availableExams',label:'Take Exam',icon:'📝'},{id:'myResults',label:'My Results',icon:'📈'},{section:'Account'},{id:'myFees',label:'My Fees',icon:'💰'},{id:'myAttendance',label:'My Attendance',icon:'📅'}]
+  admin:[
+    {section:'Overview'},
+    {id:'home',label:'Dashboard',icon:'📊'},
+    {section:'Academics'},
+    {id:'adminCourses',label:'Courses & Catalog',icon:'📚'},
+    {id:'allExams',label:'All Exams',icon:'📝'},
+    {section:'People'},
+    {id:'manageUsers',label:'Users',icon:'👥'},
+    {id:'feeManager',label:'Fee Manager',icon:'💰'},
+    {section:'Reports'},
+    {id:'submissions',label:'Submissions',icon:'📋'},
+    {id:'attendanceReport',label:'Attendance',icon:'📅'}
+  ],
+  teacher:[
+    {section:'Overview'},
+    {id:'home',label:'Dashboard',icon:'📊'},
+    {section:'Courses'},
+    {id:'myCourses',label:'My Courses',icon:'📚'},
+    {id:'addCourse',label:'New Course',icon:'➕'},
+    {section:'Exams'},
+    {id:'myExams',label:'My Exams',icon:'📝'},
+    {id:'createExam',label:'Create Exam',icon:'✏️'},
+    {section:'Students'},
+    {id:'takeAttendance',label:'Attendance',icon:'📅'},
+    {id:'results',label:'Results',icon:'📈'}
+  ],
+  student:[
+    {section:'Overview'},
+    {id:'home',label:'Dashboard',icon:'📊'},
+    {section:'Learning'},
+    {id:'browseCourses',label:'Browse Courses',icon:'📚'},
+    {id:'myCourses',label:'My Enrollments',icon:'🎯'},
+    {section:'Exams'},
+    {id:'availableExams',label:'Take Exam',icon:'📝'},
+    {id:'myResults',label:'My Results',icon:'📈'},
+    {section:'Account'},
+    {id:'myFees',label:'My Fees',icon:'💰'},
+    {id:'myAttendance',label:'My Attendance',icon:'📅'}
+  ]
+};
+
+// Bottom nav: first 4 items shown as tabs, rest in ⋮
+const bottomNavPrimary={
+  admin:['home','adminCourses','manageUsers','feeManager'],
+  teacher:['home','myCourses','myExams','takeAttendance'],
+  student:['home','browseCourses','availableExams','myFees']
+};
+const bottomNavLabels={
+  home:'Home',adminCourses:'Courses',allExams:'Exams',manageUsers:'Users',
+  feeManager:'Fees',submissions:'Reports',attendanceReport:'Attendance',
+  myCourses:'Courses',addCourse:'New',myExams:'Exams',createExam:'Create',
+  takeAttendance:'Attend.',results:'Results',browseCourses:'Explore',
+  availableExams:'Exams',myResults:'Results',myFees:'Fees',myAttendance:'Attend.'
 };
 
 function buildNav(){
@@ -524,9 +721,74 @@ function buildNav(){
   ).join('');
 }
 
+function buildBottomNav(){
+  const role=currentUser.role;
+  const primary=bottomNavPrimary[role]||[];
+  const allItems=(navCfg[role]||[]).filter(i=>i.id);
+  const primaryItems=primary.map(id=>allItems.find(i=>i.id===id)).filter(Boolean);
+  const moreItems=allItems.filter(i=>!primary.includes(i.id));
+
+  const bnInner=document.getElementById('bnInner');
+  bnInner.innerHTML=primaryItems.map(i=>`
+    <div class="bn-item" id="bn-${i.id}" onclick="navClick('${i.id}')">
+      <span class="bn-icon">${i.icon}</span>
+      <span class="bn-label">${bottomNavLabels[i.id]||i.label}</span>
+    </div>
+  `).join('')+`
+    <div class="bn-more" id="bnMore" onclick="toggleMoreMenu()">
+      <span class="dot-badge"></span>
+      <span class="bn-icon">⋯</span>
+      <span class="bn-label">More</span>
+    </div>
+  `;
+
+  // Build more menu items
+  const mmItems=document.getElementById('mmItems');
+  const mmHeader=document.getElementById('mmHeader');
+  mmHeader.textContent=`${currentUser.full_name} · ${currentUser.role}`;
+  mmItems.innerHTML=moreItems.map(i=>`
+    <div class="mm-item" id="mm-${i.id}" onclick="moreMenuNav('${i.id}')">
+      <span class="mm-icon">${i.icon}</span>${i.label}
+    </div>
+  `).join('');
+}
+
+function toggleMoreMenu(){
+  const menu=document.getElementById('moreMenu');
+  const overlay=document.getElementById('moreOverlay');
+  const btn=document.getElementById('bnMore');
+  const isOpen=menu.classList.contains('open');
+  if(isOpen){closeMoreMenu();}
+  else{menu.classList.add('open');overlay.classList.add('open');btn.classList.add('open');}
+}
+function closeMoreMenu(){
+  document.getElementById('moreMenu').classList.remove('open');
+  document.getElementById('moreOverlay').classList.remove('open');
+  const btn=document.getElementById('bnMore');
+  if(btn)btn.classList.remove('open');
+}
+function moreMenuNav(page){closeMoreMenu();navigateTo(page);}
+
 function navigateTo(page){
+  // Sidebar nav active state
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const el=document.getElementById('nav-'+page);if(el)el.classList.add('active');
+
+  // Bottom nav primary tabs active state
+  document.querySelectorAll('.bn-item').forEach(n=>n.classList.remove('active'));
+  const bn=document.getElementById('bn-'+page);if(bn)bn.classList.add('active');
+
+  // More menu active state + badge on ⋮
+  document.querySelectorAll('.mm-item').forEach(n=>n.classList.remove('active'));
+  const mm=document.getElementById('mm-'+page);
+  const bnMore=document.getElementById('bnMore');
+  if(mm){
+    mm.classList.add('active');
+    if(bnMore)bnMore.classList.add('has-active');
+  }else{
+    if(bnMore)bnMore.classList.remove('has-active');
+  }
+
   stopExamTimer();
   const map={
     home:renderHome,manageUsers:renderManageUsers,adminCourses:renderAdminCourses,
@@ -1564,33 +1826,22 @@ function stopExamTimer(){
 }
 
 // ═══════════════════════════════════════
-// BOOT — THE FIX IS HERE
+// BOOT
 // ═══════════════════════════════════════
 window.addEventListener('DOMContentLoaded',()=>{
-  // Always attach Enter key handler
   document.getElementById('loginPassword').addEventListener('keypress',e=>{if(e.key==='Enter')handleLogin();});
 
   const saved=sessionStorage.getItem('devoUser');
   if(saved){
-    // Restore session: wait for loader animation then go straight to app
     try{
       currentUser=JSON.parse(saved);
-      // Wait 1s for the loader animation, then init
       setTimeout(()=>initApp(),1000);
     }catch(e){
       sessionStorage.removeItem('devoUser');
-      // No valid session — show login after animation
-      setTimeout(()=>{
-        loaderHide();
-        document.getElementById('loginPage').classList.remove('hidden');
-      },1000);
+      setTimeout(()=>{loaderHide();document.getElementById('loginPage').classList.remove('hidden');},1000);
     }
   }else{
-    // No session — show login after animation
-    setTimeout(()=>{
-      loaderHide();
-      document.getElementById('loginPage').classList.remove('hidden');
-    },1000);
+    setTimeout(()=>{loaderHide();document.getElementById('loginPage').classList.remove('hidden');},1000);
   }
 });
 </script>
